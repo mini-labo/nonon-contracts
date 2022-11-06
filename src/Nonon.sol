@@ -8,9 +8,6 @@ import "ERC721A/ERC721A.sol";
 import "./interfaces/ILoyaltyCard.sol";
 
 contract Nonon is ERC721A {
-    // track loyalty cards minted
-    mapping(address => uint256) loyalty;
-
     ILoyaltyCard private loyaltyCard;
 
     constructor(address _loyaltyCard) ERC721A("Nonon", "NONON") {
