@@ -27,10 +27,6 @@ contract Nonon is ERC721A {
             loyaltyCard.mintTo(to);
         }
 
-        if (from != address(0) && loyaltyCard.balanceOf(from) == 0) {
-            loyaltyCard.mintTo(from);
-        }
-
         // TODO: support multi mint factoring in quantity
         loyaltyCard.registerRecievedToken(to, startTokenId);
         loyaltyCard.registerSentToken(from, startTokenId);

@@ -40,10 +40,6 @@ contract LoyaltyCard is ERC721A, ERC721AQueryable {
     }
 
     function registerRecievedToken(address _owner, uint256 _collectionTokenId) external onlyCollection {
-        if (msg.sender != collectionAddress) {
-            revert Unauthorized();
-        }
-
         if (!hasReceived[_owner][_collectionTokenId]) {
             hasReceived[_owner][_collectionTokenId] = true;
             receivedCounter[_owner] += 1;
@@ -51,10 +47,6 @@ contract LoyaltyCard is ERC721A, ERC721AQueryable {
     }
 
     function registerSentToken(address _owner, uint256 _collectionTokenId) external onlyCollection {
-        if (msg.sender != collectionAddress) {
-            revert Unauthorized();
-        }
-
         if (!hasSent[_owner][_collectionTokenId]) {
             hasSent[_owner][_collectionTokenId] = true;
             sentCounter[_owner] += 1;
