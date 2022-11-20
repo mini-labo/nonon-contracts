@@ -5,13 +5,13 @@
 pragma solidity ^0.8.13;
 
 import "ERC721A/ERC721A.sol";
-import "./interfaces/ILoyaltyCard.sol";
+import "./interfaces/IFriendshipCard.sol";
 
 contract Nonon is ERC721A {
-    ILoyaltyCard private loyaltyCard;
+    IFriendshipCard private friendshipCard;
 
-    constructor(address _loyaltyCard) ERC721A("Nonon", "NONON") {
-        loyaltyCard = ILoyaltyCard(_loyaltyCard);
+    constructor(address _friendshipCard) ERC721A("Nonon", "NONON") {
+        friendshipCard = IFriendshipCard(_friendshipCard);
     }
 
     // TEST TEST public mint
@@ -19,13 +19,17 @@ contract Nonon is ERC721A {
         _mint(to, quantity);
     }
 
-    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256) internal override {
-        if (to != address(0) && loyaltyCard.balanceOf(to) == 0) {
-            loyaltyCard.mintTo(to);
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
+        internal
+        override
+    {
+        if (to != address(0) && friendshipCard.balanceOf(to) == 0) {
+            friendshipCard.mintTo(to);
         }
 
-        // TODO: support multi mint factoring in quantity
-        loyaltyCard.registerRecievedToken(to, startTokenId);
-        loyaltyCard.registerSentToken(from, startTokenId);
+        for (uint256 i = 0; i < quantity; i++) {
+            friendshipCard.registerRecievedToken(to, startTokenId + i);
+            friendshipCard.registerSentToken(from, startTokenId + i);
+        }
     }
 }

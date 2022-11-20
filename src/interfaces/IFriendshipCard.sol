@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-interface ILoyaltyCard {
+interface IFriendshipCard {
     function registerRecievedToken(address owner, uint256 collectionTokenId) external;
 
     function registerSentToken(address owner, uint256 collectionTokenId) external;
