@@ -23,7 +23,7 @@ contract Nonon is ERC721A {
         internal
         override
     {
-        if (to != address(0) && friendshipCard.balanceOf(to) == 0) {
+        if (to != address(0) && friendshipCard.balanceOf(to) < 1) {
             friendshipCard.mintTo(to);
         }
 
