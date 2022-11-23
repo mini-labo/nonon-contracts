@@ -2,7 +2,7 @@
 
 /// @title NONON
 
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "ERC721A/ERC721A.sol";
 import "./interfaces/IFriendshipCard.sol";
@@ -23,7 +23,7 @@ contract Nonon is ERC721A {
         internal
         override
     {
-        if (to != address(0) && friendshipCard.balanceOf(to) < 1) {
+        if (to != address(0) && !friendshipCard.hasToken(to)) {
             friendshipCard.mintTo(to);
         }
 
