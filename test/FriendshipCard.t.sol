@@ -6,12 +6,18 @@ import "forge-std/Vm.sol";
 import "../src/FriendshipCard.sol";
 import "../src/Nonon.sol";
 
+contract TestableFriendshipCard is FriendshipCard {
+    function getLevelData(uint256 tokenPoints) public view returns (string memory, string memory, uint256) {
+        return levelData(tokenPoints);
+    }
+}
+
 contract FriendshipCardTest is Test {
-    FriendshipCard public friendshipCard;
+    TestableFriendshipCard public friendshipCard;
     Nonon public nonon;
 
     function setUp() public {
-        friendshipCard = new FriendshipCard();
+        friendshipCard = new TestableFriendshipCard();
         nonon = new Nonon(address(friendshipCard));
 
         friendshipCard.setCollectionAddress(address(nonon));
@@ -158,5 +164,28 @@ contract FriendshipCardTest is Test {
         assertEq(minimum, 20);
         assertEq(name, "level 3");
         assertEq(imageURI, "https://example.com/image");
+    }
+
+    function testLevelData() public {
+        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
+        friendshipCard.appendLevel(50, "level 3", "https://example.com/image2");
+
+        // 0 points, should be initial level
+        (string memory name,, uint256 cap) = friendshipCard.getLevelData(0);
+        assertEq(name, "LEVEL 1");
+        // should be minimum of index 1
+        assertEq(cap, 10);
+
+        // 14 points, should be index 1
+        (string memory name2, string memory url2, uint256 cap2) = friendshipCard.getLevelData(14);
+        assertEq(name2, "level 2");
+        assertEq(url2, "https://example.com/image");
+        assertEq(cap2, 50);
+
+        // max level - should be cap value of 2x supply of underlying token collection
+        (string memory maxName, string memory maxUrl, uint256 maxCap) = friendshipCard.getLevelData(100);
+        assertEq(maxName, "level 3");
+        assertEq(maxUrl, "https://example.com/image2");
+        assertEq(maxCap, nonon.totalSupply() * 2);
     }
 }
