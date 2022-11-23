@@ -14,6 +14,11 @@ interface IFriendshipCard {
     error CollectionZeroAddress();
 
     /**
+     * cannot add new level with a lower minimum
+     */
+    error LevelMinimumLowerThanExisting();
+
+    /**
      * emitted when address of associated token collection is set
      */
     event CollectionAddressSet(address indexed caller, address indexed newCollectionAddress);
