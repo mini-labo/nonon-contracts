@@ -5,6 +5,7 @@
 pragma solidity 0.8.16;
 
 import "ERC721A/ERC721A.sol";
+import "ERC721A/IERC721A.sol";
 import "solady/auth/OwnableRoles.sol";
 import "solady/utils/Base64.sol";
 
@@ -18,8 +19,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     mapping(address => uint256) receivedCounter;
     mapping(address => uint256) sentCounter;
 
-    string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD";
+    string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
     string public constant TOKEN_DESCRIPTION = "your friendship card";
+    string public constant BASE_IMAGE = "https://pbs.twimg.com/media/Fh-bK3MaMAY0rCv?format=jpg&name=medium";
 
     address private collectionAddress;
 
@@ -34,7 +36,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     constructor() ERC721A("FriendshipCard", "FRIEND") {
         _setOwner(msg.sender);
 
-        levels.push(Level(0, "LEVEL 1", "https://pbs.twimg.com/media/Fh-bK3MaMAY0rCv?format=jpg&name=medium"));
+        levels.push(Level(0, "LEVEL 1", BASE_IMAGE));
     }
 
     function mintTo(address to) external onlyCollection {
@@ -48,10 +50,11 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
-        string memory baseUrl = "data:application/json;base64,";
         uint256 tokenPoints = points(tokenId);
 
-        (string memory nameSuffix, string memory tokenImage) = tokenData(tokenPoints);
+        (string memory nameSuffix, string memory tokenImage, uint256 levelCap) = levelData(tokenPoints);
+
+        string memory baseUrl = "data:application/json;base64,";
 
         return string(
             abi.encodePacked(
@@ -65,7 +68,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                             '"description":"',
                             TOKEN_DESCRIPTION,
                             '",',
-                            '"attributes":[{"trait_type":"points","value":',
+                            '"attributes":[{"trait_type":"points","max_value":',
+                            _toString(levelCap),
+                            ',"value":',
                             _toString(tokenPoints),
                             "}],",
                             '"image":"',
@@ -78,16 +83,25 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         );
     }
 
-    function tokenData(uint256 tokenPoints) internal view returns (string memory, string memory) {
+    function levelData(uint256 tokenPoints) internal view returns (string memory, string memory, uint256) {
         for (uint256 i = levels.length; i > 0; i--) {
             Level memory level = levels[i - 1];
             if (tokenPoints >= level.minimum) {
-                return (level.name, level.imageURI);
+                if (i < levels.length) {
+                    // there is at least one level above current, so get its minimum
+                    Level memory nextLevel = levels[i];
+                    return (level.name, level.imageURI, nextLevel.minimum);
+                } else {
+                    // highest level
+                    uint256 maxPoints = IERC721A(collectionAddress).totalSupply() * 2;
+                    return (level.name, level.imageURI, maxPoints);
+                }
             }
         }
 
-        // return default if points below all level minimums
-        return ("LEVEL 1", "https://pbs.twimg.com/media/Fh-bK3MaMAY0rCv?format=jpg&name=medium");
+        // fallback
+        uint256 maxCollectionPoints = IERC721A(collectionAddress).totalSupply() * 2;
+        return ("LEVEL 1", BASE_IMAGE, maxCollectionPoints);
     }
 
     // prevent transfer (except mint and burn)
