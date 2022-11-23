@@ -121,4 +121,42 @@ contract FriendshipCardTest is Test {
         vm.prank(evil);
         friendshipCard.burnToken(0);
     }
+
+    function testAppendLevel() public {
+        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
+
+        // index 0 inserted by constructor
+        (uint16 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
+
+        assertEq(minimum, 10);
+        assertEq(name, "level 2");
+        assertEq(imageURI, "https://example.com/image");
+    }
+
+    function testFailAppendLevelAsNonOwner() public {
+        address evil = vm.addr(800);
+        vm.prank(evil);
+        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
+    }
+
+    function testFailAppendLevelBelowExistingMinimumPoints() public {
+        // constructor inserts minimum of 0
+        friendshipCard.appendLevel(0, "level 2", "https://example.com/image");
+    }
+
+    function testRemoveLevel() public {
+        // insert index 1 and 2
+        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
+        friendshipCard.appendLevel(20, "level 3", "https://example.com/image");
+
+        // remove index 1
+        friendshipCard.removeLevel(1);
+
+        // previous index 2 should be new index 1
+        (uint16 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
+
+        assertEq(minimum, 20);
+        assertEq(name, "level 3");
+        assertEq(imageURI, "https://example.com/image");
+    }
 }
