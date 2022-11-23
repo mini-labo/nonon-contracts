@@ -2,17 +2,15 @@
 
 /// @title FRIENDSHIP CARD - YOUR SPECIAL GIFT
 
-pragma solidity ^0.8.13;
+pragma solidity 0.8.16;
 
 import "ERC721A/ERC721A.sol";
-import "ERC721A/extensions/ERC721AQueryable.sol";
 import "solady/auth/OwnableRoles.sol";
 import "solady/utils/Base64.sol";
 
-error OnlyForYou();
-error NotAllowed();
+import "./interfaces/IFriendshipCard.sol";
 
-contract FriendshipCard is ERC721A, OwnableRoles {
+contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // track tokens that have been collected by a given address
     mapping(address => mapping(uint256 => bool)) hasReceived;
     mapping(address => mapping(uint256 => bool)) hasSent;
@@ -31,6 +29,10 @@ contract FriendshipCard is ERC721A, OwnableRoles {
 
     function mintTo(address to) external onlyCollection {
         _safeMint(to, 1);
+    }
+
+    function burnToken(uint256 tokenId) public {
+        _burn(tokenId, true);
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -70,38 +72,44 @@ contract FriendshipCard is ERC721A, OwnableRoles {
     }
 
     function _beforeTokenTransfers(address from, address to, uint256, uint256) internal pure override {
-        // we stop you losing your card to thieves. its only for you
         if (from != address(0) && to != address(0)) {
             revert OnlyForYou();
         }
     }
 
-    function setCollectionAddress(address _collectionAddress) external onlyOwner {
-        collectionAddress = _collectionAddress;
+    function setCollectionAddress(address newAddress) external onlyOwner {
+        if (newAddress == address(0)) revert CollectionZeroAddress();
+
+        collectionAddress = newAddress;
+        emit CollectionAddressSet(msg.sender, newAddress);
     }
 
-    function registerRecievedToken(address _owner, uint256 _collectionTokenId) external onlyCollection {
-        if (!hasReceived[_owner][_collectionTokenId]) {
-            hasReceived[_owner][_collectionTokenId] = true;
-            receivedCounter[_owner] += 1;
+    function registerRecievedToken(address owner, uint256 collectionTokenId) external onlyCollection {
+        if (!hasReceived[owner][collectionTokenId]) {
+            hasReceived[owner][collectionTokenId] = true;
+            receivedCounter[owner] += 1;
         }
     }
 
-    function registerSentToken(address _owner, uint256 _collectionTokenId) external onlyCollection {
-        if (!hasSent[_owner][_collectionTokenId]) {
-            hasSent[_owner][_collectionTokenId] = true;
-            sentCounter[_owner] += 1;
+    function registerSentToken(address owner, uint256 collectionTokenId) external onlyCollection {
+        if (!hasSent[owner][collectionTokenId]) {
+            hasSent[owner][collectionTokenId] = true;
+            sentCounter[owner] += 1;
         }
     }
 
-    function points(uint256 _tokenId) public view returns (uint256) {
-        address owner = ownerOf(_tokenId);
+    function points(uint256 tokenId) public view returns (uint256) {
+        address owner = ownerOf(tokenId);
         return receivedCounter[owner] + sentCounter[owner];
+    }
+
+    function hasToken(address receiver) public view returns (bool) {
+        return balanceOf(receiver) > 0;
     }
 
     modifier onlyCollection() {
         if (msg.sender != collectionAddress) {
-            revert NotAllowed();
+            revert Unauthorized();
         }
         _;
     }

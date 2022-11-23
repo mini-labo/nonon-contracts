@@ -98,4 +98,27 @@ contract FriendshipCardTest is Test {
         assertEq(friendshipCard.balanceOf(minter), 1);
         assertEq(friendshipCard.points(0), quantity);
     }
+
+    function testBurnable() public {
+        address minter = vm.addr(888);
+        nonon.mint(minter, 1);
+        assertEq(friendshipCard.balanceOf(minter), 1);
+
+        vm.prank(minter);
+        friendshipCard.burnToken(0);
+        vm.stopPrank();
+
+        assertEq(friendshipCard.balanceOf(minter), 0);
+    }
+
+    function testFailNonHolderBurn() public {
+        address minter = vm.addr(887);
+        address evil = vm.addr(886);
+
+        nonon.mint(minter, 1);
+        assertEq(friendshipCard.balanceOf(minter), 1);
+
+        vm.prank(evil);
+        friendshipCard.burnToken(0);
+    }
 }
