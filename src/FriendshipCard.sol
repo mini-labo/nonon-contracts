@@ -15,32 +15,33 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // track tokens that have been collected by a given address
     mapping(address => mapping(uint256 => bool)) hasReceived;
     mapping(address => mapping(uint256 => bool)) hasSent;
-
     mapping(address => uint256) receivedCounter;
     mapping(address => uint256) sentCounter;
 
+    // PLACEHOLDER VALUES
     string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
     string public constant TOKEN_DESCRIPTION = "your friendship card";
     string public constant BASE_IMAGE = "https://pbs.twimg.com/media/Fh-bK3MaMAY0rCv?format=jpg&name=medium";
 
-    address private collectionAddress;
+    address private immutable collectionAddress;
 
     struct Level {
-        uint16 minimum;
+        uint256 minimum;
         string name;
         string imageURI;
     }
 
     Level[] public levels;
 
-    constructor() ERC721A("FriendshipCard", "FRIEND") {
+    constructor(address tokenCollectionAddress) ERC721A("FriendshipCard", "FRIEND") {
         _setOwner(msg.sender);
+        collectionAddress = tokenCollectionAddress;
 
         levels.push(Level(0, "LEVEL 1", BASE_IMAGE));
     }
 
     function mintTo(address to) external onlyCollection {
-        _safeMint(to, 1);
+        _mint(to, 1);
     }
 
     function burnToken(uint256 tokenId) public {
@@ -51,11 +52,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
         uint256 tokenPoints = points(tokenId);
-
         (string memory nameSuffix, string memory tokenImage, uint256 levelCap) = levelData(tokenPoints);
 
         string memory baseUrl = "data:application/json;base64,";
-
         return string(
             abi.encodePacked(
                 baseUrl,
@@ -83,8 +82,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         );
     }
 
+    // get metadata for token display based on a given points value
     function levelData(uint256 tokenPoints) internal view returns (string memory, string memory, uint256) {
-        for (uint256 i = levels.length; i > 0; i--) {
+        for (uint256 i = levels.length; i > 0;) {
             Level memory level = levels[i - 1];
             if (tokenPoints >= level.minimum) {
                 if (i < levels.length) {
@@ -97,6 +97,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                     return (level.name, level.imageURI, maxPoints);
                 }
             }
+            unchecked { --i; }
         }
 
         // fallback
@@ -111,13 +112,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         }
     }
 
-    function setCollectionAddress(address newAddress) external onlyOwner {
-        if (newAddress == address(0)) revert CollectionZeroAddress();
-
-        collectionAddress = newAddress;
-        emit CollectionAddressSet(msg.sender, newAddress);
-    }
-
+    // add an ID for associated collection to token owner's received list
     function registerRecievedToken(address owner, uint256 collectionTokenId) external onlyCollection {
         if (!hasReceived[owner][collectionTokenId]) {
             hasReceived[owner][collectionTokenId] = true;
@@ -125,6 +120,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         }
     }
 
+    // add an ID for associated collection to token owner's sent list
     function registerSentToken(address owner, uint256 collectionTokenId) external onlyCollection {
         if (!hasSent[owner][collectionTokenId]) {
             hasSent[owner][collectionTokenId] = true;
@@ -132,17 +128,19 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         }
     }
 
+    // total points accumulated by a holder
     function points(uint256 tokenId) public view returns (uint256) {
         address owner = ownerOf(tokenId);
         return receivedCounter[owner] + sentCounter[owner];
     }
 
+    // check if given address is a holder of the token
     function hasToken(address receiver) public view returns (bool) {
         return balanceOf(receiver) > 0;
     }
 
-    // add a new evolution level to the list - must be greater than previous minimum
-    function appendLevel(uint16 minimum, string calldata name, string calldata imageURI) external onlyOwner {
+    // add a new evolution level to the list - must be greater points threshold than previous minimum
+    function appendLevel(uint256 minimum, string calldata name, string calldata imageURI) external onlyOwner {
         Level memory lastLevel = levels[levels.length - 1];
         if (lastLevel.minimum >= minimum) revert LevelMinimumLowerThanExisting();
 
@@ -153,8 +151,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     function removeLevel(uint256 index) external onlyOwner {
         if (index >= levels.length) return;
 
-        for (uint256 i = index; i < levels.length - 1; i++) {
+        for (uint256 i = index; i < levels.length - 1;) {
             levels[i] = levels[i + 1];
+            unchecked { ++i; }
         }
 
         levels.pop();

@@ -7,6 +7,8 @@ import "../src/FriendshipCard.sol";
 import "../src/Nonon.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
+    constructor(address tokenAddress) FriendshipCard(tokenAddress) {}
+
     function getLevelData(uint256 tokenPoints) public view returns (string memory, string memory, uint256) {
         return levelData(tokenPoints);
     }
@@ -17,10 +19,10 @@ contract FriendshipCardTest is Test {
     Nonon public nonon;
 
     function setUp() public {
-        friendshipCard = new TestableFriendshipCard();
-        nonon = new Nonon(address(friendshipCard));
+        nonon = new Nonon();
+        friendshipCard = new TestableFriendshipCard(address(nonon));
 
-        friendshipCard.setCollectionAddress(address(nonon));
+        nonon.setFriendshipCard(address(friendshipCard));
     }
 
     function testFailTransferToThirdParty() public {
@@ -33,10 +35,10 @@ contract FriendshipCardTest is Test {
         friendshipCard.transferFrom(recipient, vm.addr(1), 0);
     }
 
-    function testFailNonOwnerSetCollectionAddress() public {
+    function testFailNonOwnerSetFriendshipCardAddress() public {
         address notAllowed = vm.addr(998);
         vm.prank(notAllowed);
-        friendshipCard.setCollectionAddress(notAllowed);
+        nonon.setFriendshipCard(notAllowed);
     }
 
     function testPointsMintingGrantsPointsCard() public {
@@ -132,7 +134,7 @@ contract FriendshipCardTest is Test {
         friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
 
         // index 0 inserted by constructor
-        (uint16 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
+        (uint256 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
 
         assertEq(minimum, 10);
         assertEq(name, "level 2");
@@ -159,7 +161,7 @@ contract FriendshipCardTest is Test {
         friendshipCard.removeLevel(1);
 
         // previous index 2 should be new index 1
-        (uint16 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
+        (uint256 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
 
         assertEq(minimum, 20);
         assertEq(name, "level 3");

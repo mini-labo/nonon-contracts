@@ -18,11 +18,6 @@ interface IFriendshipCard {
      */
     error LevelMinimumLowerThanExisting();
 
-    /**
-     * emitted when address of associated token collection is set
-     */
-    event CollectionAddressSet(address indexed caller, address indexed newCollectionAddress);
-
     function registerRecievedToken(address owner, uint256 collectionTokenId) external;
 
     function registerSentToken(address owner, uint256 collectionTokenId) external;

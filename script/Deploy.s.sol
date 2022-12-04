@@ -11,9 +11,9 @@ contract DeployScript is Script {
         uint256 deployerPK = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPK);
 
-        FriendshipCard friendshipCard = new FriendshipCard();
-        Nonon nonon = new Nonon(address(friendshipCard));
-        friendshipCard.setCollectionAddress(address(nonon));
+        Nonon nonon = new Nonon();
+        FriendshipCard friendshipCard = new FriendshipCard(address(nonon));
+        nonon.setFriendshipCard(address(friendshipCard));
 
         vm.stopBroadcast();
     }
