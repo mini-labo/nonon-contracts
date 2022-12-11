@@ -4,7 +4,7 @@
 
 pragma solidity 0.8.16;
 
-import "ERC721A/extensions/ERC721A.sol";
+import "ERC721A/ERC721A.sol";
 import "ERC721A/interfaces/IERC721A.sol";
 import "solady/auth/OwnableRoles.sol";
 import "solady/utils/Base64.sol";
