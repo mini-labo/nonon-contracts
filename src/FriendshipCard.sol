@@ -8,6 +8,7 @@ import "ERC721A/ERC721A.sol";
 import "ERC721A/IERC721A.sol";
 import "solady/auth/OwnableRoles.sol";
 import "solady/utils/Base64.sol";
+import "solady/utils/LibBitmap.sol";
 
 import "./interfaces/IFriendshipCard.sol";
 
@@ -15,6 +16,10 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // track tokens that have been collected by a given address
     mapping(address => mapping(uint256 => bool)) hasReceived;
     mapping(address => mapping(uint256 => bool)) hasSent;
+
+    mapping(address => LibBitmap.Bitmap) receivedBitmap;
+    mapping(address => LibBitmap.Bitmap) sentBitmap;
+
     mapping(address => uint256) receivedCounter;
     mapping(address => uint256) sentCounter;
 
@@ -117,33 +122,16 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         external
         onlyCollection
     {
-        uint256 sendCountIncrement;
-        uint256 receiveCountIncrement;
-
-        for (uint256 i; i < quantity; i++) {
-            uint256 tokenId = collectionTokenStartId + i;
-
-            // register send
-            if (from != address(0) && !hasSent[from][tokenId]) {
-                hasSent[from][tokenId] = true;
-                sendCountIncrement += 1;
-            }
-
-            // register receipt
-            if (!hasReceived[to][tokenId]) {
-                hasReceived[to][tokenId] = true;
-                receiveCountIncrement += 1;
-            }
-        }
-
-        sentCounter[from] += sendCountIncrement;
-        receivedCounter[to] += receiveCountIncrement;
+        LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
+        LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
     }
 
     // total points accumulated by a holder
     function points(uint256 tokenId) public view returns (uint256) {
         address owner = ownerOf(tokenId);
-        return receivedCounter[owner] + sentCounter[owner];
+        uint256 max = IERC721A(collectionAddress).totalSupply();
+
+        return LibBitmap.popCount(receivedBitmap[owner], 0, max) + LibBitmap.popCount(sentBitmap[owner], 0, max);
     }
 
     // check if given address is a holder of the token
@@ -165,7 +153,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
         for (uint256 i = index; i < levels.length - 1;) {
             levels[i] = levels[i + 1];
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         levels.pop();
