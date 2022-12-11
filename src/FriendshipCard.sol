@@ -116,12 +116,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         external
         onlyCollection
     {
-        // register token id send events for address
         if (from != address(0)) {
-            LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
+            if (to != from) {
+                LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
+            }
         }
 
-        // register token id receive events for address
         if (to != address(0)) {
             LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
         }
