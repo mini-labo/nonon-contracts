@@ -107,6 +107,18 @@ contract FriendshipCardTest is Test {
         assertEq(friendshipCard.points(0), quantity);
     }
 
+    function testSendToSelfNoPoints() public {
+        address minter = vm.addr(201);
+        nonon.mint(minter, 1);
+
+        vm.prank(minter);
+        nonon.transferFrom(minter, minter, 0);
+        vm.stopPrank();
+
+        // just 1 point for receiving from mint
+        assertEq(friendshipCard.points(0), 1);
+    }
+
     function testBurnable() public {
         address minter = vm.addr(888);
         nonon.mint(minter, 1);
