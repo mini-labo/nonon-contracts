@@ -117,21 +117,27 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         external
         onlyCollection
     {
-        for (uint256 i = 0; i < quantity; i++) {
+        uint256 sendCountIncrement;
+        uint256 receiveCountIncrement;
+
+        for (uint256 i; i < quantity; i++) {
             uint256 tokenId = collectionTokenStartId + i;
 
             // register send
             if (from != address(0) && !hasSent[from][tokenId]) {
                 hasSent[from][tokenId] = true;
-                sentCounter[from] += 1;
+                sendCountIncrement += 1;
             }
 
             // register receipt
             if (!hasReceived[to][tokenId]) {
                 hasReceived[to][tokenId] = true;
-                receivedCounter[to] += 1;
+                receiveCountIncrement += 1;
             }
         }
+
+        sentCounter[from] += sendCountIncrement;
+        receivedCounter[to] += receiveCountIncrement;
     }
 
     // total points accumulated by a holder
