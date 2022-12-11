@@ -14,11 +14,8 @@ import "./interfaces/IFriendshipCard.sol";
 
 contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // track tokens that have been collected by a given address
-    mapping(address => LibBitmap.Bitmap) receivedBitmap;
-    mapping(address => LibBitmap.Bitmap) sentBitmap;
-
-    mapping(address => uint256) receivedCounter;
-    mapping(address => uint256) sentCounter;
+    mapping(address => LibBitmap.Bitmap) private receivedBitmap;
+    mapping(address => LibBitmap.Bitmap) private sentBitmap;
 
     // PLACEHOLDER VALUES
     string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
@@ -121,12 +118,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     {
         // register token id send events for address
         if (from != address(0)) {
-          LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
+            LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
         }
 
         // register token id receive events for address
         if (to != address(0)) {
-          LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
+            LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
         }
     }
 
