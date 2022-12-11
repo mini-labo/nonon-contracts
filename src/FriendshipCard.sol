@@ -5,7 +5,7 @@
 pragma solidity 0.8.16;
 
 import "ERC721A/ERC721A.sol";
-import "ERC721A/IERC721A.sol";
+import "ERC721A/interfaces/IERC721A.sol";
 import "solady/auth/OwnableRoles.sol";
 import "solady/utils/Base64.sol";
 import "solady/utils/LibBitmap.sol";
@@ -13,9 +13,13 @@ import "solady/utils/LibBitmap.sol";
 import "./interfaces/IFriendshipCard.sol";
 
 contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
+    using LibBitmap for LibBitmap.Bitmap;
+
     // track tokens that have been collected by a given address
     mapping(address => LibBitmap.Bitmap) private receivedBitmap;
     mapping(address => LibBitmap.Bitmap) private sentBitmap;
+
+    // tokenId -> collectionId
 
     // PLACEHOLDER VALUES
     string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
@@ -118,12 +122,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     {
         if (from != address(0)) {
             if (to != from) {
-                LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
+                sentBitmap[from].setBatch(collectionTokenStartId, quantity);
             }
         }
 
         if (to != address(0)) {
-            LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
+            receivedBitmap[to].setBatch(collectionTokenStartId, quantity);
         }
     }
 
@@ -132,7 +136,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         address owner = ownerOf(tokenId);
         uint256 max = IERC721A(collectionAddress).totalSupply() + 1;
 
-        return LibBitmap.popCount(receivedBitmap[owner], 0, max) + LibBitmap.popCount(sentBitmap[owner], 0, max);
+        return receivedBitmap[owner].popCount(0, max) + sentBitmap[owner].popCount(0, max);
     }
 
     // check if given address is a holder of the token
