@@ -41,9 +41,6 @@ contract Nonon is ERC721A, OwnableRoles {
             friendshipCard.mintTo(to);
         }
 
-        for (uint256 i = 0; i < quantity; i++) {
-            friendshipCard.registerRecievedToken(to, startTokenId + i);
-            friendshipCard.registerSentToken(from, startTokenId + i);
-        }
+        friendshipCard.registerTokenMovement(from, to, startTokenId, quantity);
     }
 }

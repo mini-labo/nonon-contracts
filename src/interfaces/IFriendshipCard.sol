@@ -18,9 +18,8 @@ interface IFriendshipCard {
      */
     error LevelMinimumLowerThanExisting();
 
-    function registerRecievedToken(address owner, uint256 collectionTokenId) external;
-
-    function registerSentToken(address owner, uint256 collectionTokenId) external;
+    function registerTokenMovement(address from, address to, uint256 collectionTokenStartId, uint256 quantity)
+        external;
 
     function mintTo(address to) external;
 
