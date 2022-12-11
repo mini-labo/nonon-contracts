@@ -119,14 +119,21 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         external
         onlyCollection
     {
-        LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
-        LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
+        // register token id send events for address
+        if (from != address(0)) {
+          LibBitmap.setBatch(sentBitmap[from], collectionTokenStartId, quantity);
+        }
+
+        // register token id receive events for address
+        if (to != address(0)) {
+          LibBitmap.setBatch(receivedBitmap[to], collectionTokenStartId, quantity);
+        }
     }
 
     // total points accumulated by a holder
     function points(uint256 tokenId) public view returns (uint256) {
         address owner = ownerOf(tokenId);
-        uint256 max = IERC721A(collectionAddress).totalSupply();
+        uint256 max = IERC721A(collectionAddress).totalSupply() + 1;
 
         return LibBitmap.popCount(receivedBitmap[owner], 0, max) + LibBitmap.popCount(sentBitmap[owner], 0, max);
     }
