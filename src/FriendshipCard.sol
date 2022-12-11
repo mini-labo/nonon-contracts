@@ -14,9 +14,6 @@ import "./interfaces/IFriendshipCard.sol";
 
 contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // track tokens that have been collected by a given address
-    mapping(address => mapping(uint256 => bool)) hasReceived;
-    mapping(address => mapping(uint256 => bool)) hasSent;
-
     mapping(address => LibBitmap.Bitmap) receivedBitmap;
     mapping(address => LibBitmap.Bitmap) sentBitmap;
 
@@ -153,9 +150,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
         for (uint256 i = index; i < levels.length - 1;) {
             levels[i] = levels[i + 1];
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
         levels.pop();
