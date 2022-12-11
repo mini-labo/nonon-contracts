@@ -112,19 +112,25 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         }
     }
 
-    // add an ID for associated collection to token owner's received list
-    function registerRecievedToken(address owner, uint256 collectionTokenId) external onlyCollection {
-        if (!hasReceived[owner][collectionTokenId]) {
-            hasReceived[owner][collectionTokenId] = true;
-            receivedCounter[owner] += 1;
-        }
-    }
+    // add ID for associated sequential tokens to appropriate lists
+    function registerTokenMovement(address from, address to, uint256 collectionTokenStartId, uint256 quantity)
+        external
+        onlyCollection
+    {
+        for (uint256 i = 0; i < quantity; i++) {
+            uint256 tokenId = collectionTokenStartId + i;
 
-    // add an ID for associated collection to token owner's sent list
-    function registerSentToken(address owner, uint256 collectionTokenId) external onlyCollection {
-        if (!hasSent[owner][collectionTokenId]) {
-            hasSent[owner][collectionTokenId] = true;
-            sentCounter[owner] += 1;
+            // register send
+            if (from != address(0) && !hasSent[from][tokenId]) {
+                hasSent[from][tokenId] = true;
+                sentCounter[from] += 1;
+            }
+
+            // register receipt
+            if (!hasReceived[to][tokenId]) {
+                hasReceived[to][tokenId] = true;
+                receivedCounter[to] += 1;
+            }
         }
     }
 
