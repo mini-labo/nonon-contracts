@@ -15,6 +15,8 @@ contract DeployScript is Script {
         FriendshipCard friendshipCard = new FriendshipCard(address(nonon));
         nonon.setFriendshipCard(address(friendshipCard));
 
+        friendshipCard.appendLevel(10, "LEVEL 2", "https://pbs.twimg.com/media/Fii3D6SVIAAYxtQ?format=jpg&name=large");
+
         vm.stopBroadcast();
     }
 }

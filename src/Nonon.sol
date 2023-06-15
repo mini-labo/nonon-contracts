@@ -24,11 +24,20 @@ contract Nonon is ERC721A, OwnableRoles {
         _mint(to, quantity);
     }
 
+    // start at 1 so we can reserve 0 for open swap address
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
+    }
+
     function setFriendshipCard(address tokenAddress) external onlyOwner {
         if (tokenAddress == address(0)) revert FriendshipTokenZeroAddress();
         friendshipCardAddress = tokenAddress;
 
         emit FriendshipTokenAddressSet(msg.sender, tokenAddress);
+    }
+
+    function exists(uint256 _tokenId) external view returns (bool) {
+        return _exists(_tokenId);
     }
 
     function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)

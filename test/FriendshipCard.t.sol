@@ -29,10 +29,9 @@ contract FriendshipCardTest is Test {
         address recipient = vm.addr(999);
         vm.prank(address(nonon));
         friendshipCard.mintTo(recipient);
-        vm.stopPrank();
 
         vm.prank(recipient);
-        friendshipCard.transferFrom(recipient, vm.addr(1), 0);
+        friendshipCard.transferFrom(recipient, vm.addr(1), 1);
     }
 
     function testFailNonOwnerSetFriendshipCardAddress() public {
@@ -60,18 +59,17 @@ contract FriendshipCardTest is Test {
 
         nonon.mint(minter, 1);
 
-        // loyalty tokenId 0 - 1 point for receiving
-        assertEq(friendshipCard.points(0), 1);
+        // loyalty tokenId 1 - 1 point for receiving
+        assertEq(friendshipCard.points(1), 1);
 
         vm.prank(minter);
-        nonon.transferFrom(minter, recipient, 0);
-        vm.stopPrank();
+        nonon.transferFrom(minter, recipient, 1);
 
-        // loyalty tokenId 0 - 1 point each for sending, receiving
-        assertEq(friendshipCard.points(0), 2);
-        // loyalty tokenId 1 - should have been granted to recipeint and have
+        // loyalty tokenId 1 - 1 point each for sending, receiving
+        assertEq(friendshipCard.points(1), 2);
+        // loyalty tokenId 2 - should have been granted to recipeint and have
         // 1 point for receiving
-        assertEq(friendshipCard.points(1), 1);
+        assertEq(friendshipCard.points(2), 1);
     }
 
     function testPointUniqueness() public {
@@ -80,20 +78,18 @@ contract FriendshipCardTest is Test {
 
         nonon.mint(minter, 1);
 
-        // loyalty tokenId 0 - 1 point for receiving
-        assertEq(friendshipCard.points(0), 1);
+        // loyalty tokenId 1 - 1 point for receiving
+        assertEq(friendshipCard.points(1), 1);
 
         vm.prank(minter);
-        nonon.transferFrom(minter, recipient, 0);
-        vm.stopPrank();
+        nonon.transferFrom(minter, recipient, 1);
 
         vm.prank(recipient);
-        nonon.transferFrom(recipient, minter, 0);
-        vm.stopPrank();
+        nonon.transferFrom(recipient, minter, 1);
 
-        // loyalty tokenId 0 - 1 point each for sending, receiving
+        // loyalty tokenId 1 - 1 point each for sending, receiving
         // does not count duplicate from receiving again!
-        assertEq(friendshipCard.points(0), 2);
+        assertEq(friendshipCard.points(1), 2);
     }
 
     function testMultiMintPoints(uint16 quantity) public {
@@ -104,7 +100,7 @@ contract FriendshipCardTest is Test {
 
         nonon.mint(minter, quantity);
         assertEq(friendshipCard.balanceOf(minter), 1);
-        assertEq(friendshipCard.points(0), quantity);
+        assertEq(friendshipCard.points(1), quantity);
     }
 
     function testSendToSelfNoPoints() public {
@@ -112,11 +108,10 @@ contract FriendshipCardTest is Test {
         nonon.mint(minter, 1);
 
         vm.prank(minter);
-        nonon.transferFrom(minter, minter, 0);
-        vm.stopPrank();
+        nonon.transferFrom(minter, minter, 1);
 
         // just 1 point for receiving from mint
-        assertEq(friendshipCard.points(0), 1);
+        assertEq(friendshipCard.points(1), 1);
     }
 
     function testBurnable() public {
@@ -125,8 +120,7 @@ contract FriendshipCardTest is Test {
         assertEq(friendshipCard.balanceOf(minter), 1);
 
         vm.prank(minter);
-        friendshipCard.burnToken(0);
-        vm.stopPrank();
+        friendshipCard.burnToken(1);
 
         assertEq(friendshipCard.balanceOf(minter), 0);
     }
@@ -139,7 +133,7 @@ contract FriendshipCardTest is Test {
         assertEq(friendshipCard.balanceOf(minter), 1);
 
         vm.prank(evil);
-        friendshipCard.burnToken(0);
+        friendshipCard.burnToken(1);
     }
 
     function testAppendLevel() public {
@@ -184,7 +178,7 @@ contract FriendshipCardTest is Test {
         friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
         friendshipCard.appendLevel(50, "level 3", "https://example.com/image2");
 
-        // 0 points, should be initial level
+        // 0 1oints, should be initial level
         (string memory name,, uint256 cap) = friendshipCard.getLevelData(0);
         assertEq(name, "LEVEL 1");
         // should be minimum of index 1
@@ -201,5 +195,23 @@ contract FriendshipCardTest is Test {
         assertEq(maxName, "level 3");
         assertEq(maxUrl, "https://example.com/image2");
         assertEq(maxCap, nonon.totalSupply() * 2);
+    }
+
+    function testHasReceivedToken() public {
+        address minter = vm.addr(300);
+        nonon.mint(minter, 1);
+
+        bool receivedFirst = friendshipCard.hasReceivedToken(minter, 1);
+        bool receivedSecond = friendshipCard.hasReceivedToken(minter, 2);
+        assertEq(receivedFirst, true);
+        assertEq(receivedSecond, false);
+    }
+
+    function testGetReceivedTokens() public {
+        // TODO
+    }
+
+    function testGetReceivedTokensMaxSupply() public {
+        // TODO
     }
 }

@@ -19,14 +19,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     mapping(address => LibBitmap.Bitmap) private receivedBitmap;
     mapping(address => LibBitmap.Bitmap) private sentBitmap;
 
-    // tokenId -> collectionId
-
     // PLACEHOLDER VALUES
     string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
     string public constant TOKEN_DESCRIPTION = "your friendship card";
     string public constant BASE_IMAGE = "https://pbs.twimg.com/media/Fh-bK3MaMAY0rCv?format=jpg&name=medium";
 
-    address private immutable collectionAddress;
+    address public immutable collectionAddress;
 
     struct Level {
         uint256 minimum;
@@ -100,7 +98,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                     return (level.name, level.imageURI, maxPoints);
                 }
             }
-            unchecked { --i; }
+            unchecked {
+                --i;
+            }
         }
 
         // fallback
@@ -136,7 +136,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         address owner = ownerOf(tokenId);
         uint256 max = IERC721A(collectionAddress).totalSupply() + 1;
 
-        return receivedBitmap[owner].popCount(0, max) + sentBitmap[owner].popCount(0, max);
+        return receivedBitmap[owner].popCount(1, max) + sentBitmap[owner].popCount(1, max);
     }
 
     // check if given address is a holder of the token
@@ -158,10 +158,34 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
         for (uint256 i = index; i < levels.length - 1;) {
             levels[i] = levels[i + 1];
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         levels.pop();
+    }
+
+    // check if given address has ever received tokenId
+    function hasReceivedToken(address owner, uint256 tokenId) external view returns (bool) {
+        return receivedBitmap[owner].get(tokenId);
+    }
+
+    // check if given address has ever sent tokenId
+    function hasSentToken(address owner, uint256 tokenId) external view returns (bool) {
+        return sentBitmap[owner].get(tokenId);
+    }
+
+    //     function receivedTokens(address owner) external view returns (uint256[] memory received) {
+    //         // TODO: return bitmap words directly for client to interpret
+    //     }
+    //
+    //     function sentTokens(address owner) external view returns (uint256[] memory sent) {
+    //         // TODO: return bitmap words directly for client to interpret
+    //     }
+
+    function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
     }
 
     modifier onlyCollection() {
