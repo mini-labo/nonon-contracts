@@ -208,10 +208,97 @@ contract FriendshipCardTest is Test {
     }
 
     function testGetReceivedTokens() public {
-        // TODO
+        address minter = vm.addr(300);
+        nonon.mint(minter, 1);
+
+        uint256[] memory tokenStatusWords = friendshipCard.tokenStatusMap(minter, false);
+        uint256[] memory tokenStatusSentWords = friendshipCard.tokenStatusMap(minter, true);
+
+        // 2nd bit of 1st word should be set (index 1 of word), but no others
+        uint256 word = tokenStatusWords[0];
+        bool tokenIndexIsSet = ((word & (1 << 1)) != 0);
+
+        // sent flag should not be set for same bit
+        uint256 sentWord = tokenStatusSentWords[0];
+        bool tokenIndexSentIsSet = ((sentWord & (1 << 1)) != 0);
+
+        assertEq(tokenIndexIsSet, true);
+        assertEq(tokenIndexSentIsSet, false);
+
+        for (uint256 i = 2; i <= 5000; i++) {
+            uint256 targetWordIndex = i >> 8;
+            uint256 bitIndex = i & 0xff;
+            uint256 targetWord = tokenStatusWords[targetWordIndex];
+
+            bool notReceivedTokenIsSet = ((targetWord & (1 << bitIndex)) != 0);
+            assertEq(notReceivedTokenIsSet, false);
+        }
     }
 
     function testGetReceivedTokensMaxSupply() public {
-        // TODO
+        address minter = vm.addr(300);
+        nonon.mint(minter, 5000);
+
+        uint256[] memory tokenStatusWords = friendshipCard.tokenStatusMap(minter, false);
+
+        // all bits up to 5000 should be set
+        for (uint256 i = 1; i <= 5000; i++) {
+            uint256 targetWordIndex = i >> 8;
+            uint256 bitIndex = i & 0xff;
+            uint256 targetWord = tokenStatusWords[targetWordIndex];
+
+            bool tokenIsSet = ((targetWord & (1 << bitIndex)) != 0);
+            assertEq(tokenIsSet, true);
+        }
+    }
+
+    function testGetSentTokens() public {
+        address minter = vm.addr(300);
+        address secondAddress = vm.addr(301);
+        nonon.mint(minter, 1);
+
+        vm.prank(minter);
+        nonon.transferFrom(minter, secondAddress, 1);
+
+        uint256[] memory tokenStatusSentWords = friendshipCard.tokenStatusMap(minter, true);
+
+        // 2nd bit of 1st word should be set (index 1 of word), but no others
+        uint256 word = tokenStatusSentWords[0];
+        bool tokenIndexIsSet = ((word & (1 << 1)) != 0);
+
+        assertEq(tokenIndexIsSet, true);
+
+        for (uint256 i = 2; i <= 5000; i++) {
+            uint256 targetWordIndex = i >> 8;
+            uint256 bitIndex = i & 0xff;
+            uint256 targetWord = tokenStatusSentWords[targetWordIndex];
+
+            bool notReceivedTokenIsSet = ((targetWord & (1 << bitIndex)) != 0);
+            assertEq(notReceivedTokenIsSet, false);
+        }
+    }
+
+    function testGetSentTokensMaxSupply() public {
+        address minter = vm.addr(300);
+        address secondAddress = vm.addr(301);
+
+        nonon.mint(minter, 5000);
+
+        vm.startPrank(minter);
+        for (uint256 i = 1; i <= 5000; i++) {
+            nonon.transferFrom(minter, secondAddress, i);
+        }
+
+        uint256[] memory tokenStatusWords = friendshipCard.tokenStatusMap(minter, true);
+
+        // all bits up to 5000 should be set
+        for (uint256 i = 1; i <= 5000; i++) {
+            uint256 targetWordIndex = i >> 8;
+            uint256 bitIndex = i & 0xff;
+            uint256 targetWord = tokenStatusWords[targetWordIndex];
+
+            bool tokenIsSet = ((targetWord & (1 << bitIndex)) != 0);
+            assertEq(tokenIsSet, true);
+        }
     }
 }

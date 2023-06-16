@@ -176,13 +176,15 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         return sentBitmap[owner].get(tokenId);
     }
 
-    //     function receivedTokens(address owner) external view returns (uint256[] memory received) {
-    //         // TODO: return bitmap words directly for client to interpret
-    //     }
-    //
-    //     function sentTokens(address owner) external view returns (uint256[] memory sent) {
-    //         // TODO: return bitmap words directly for client to interpret
-    //     }
+    function tokenStatusMap(address owner, bool sent) external view returns (uint256[] memory received) {
+        // TODO: reference max supply instead of hardcoding
+        uint256 maxWordIndex = 5000 >> 8;
+        uint256[] memory words = new uint256[](maxWordIndex + 1);
+        for (uint256 i = 0; i <= maxWordIndex; i++) {
+            words[i] = (sent ? sentBitmap[owner].map[i] : receivedBitmap[owner].map[i]);
+        }
+        return words;
+    }
 
     function _startTokenId() internal view virtual override returns (uint256) {
         return 1;
