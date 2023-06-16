@@ -5,7 +5,6 @@ pragma solidity 0.8.16;
 import "./interfaces/INonon.sol";
 
 error Unauthorized();
-error WrongListingIndex();
 error OfferForNonexistentToken();
 error NoActiveOffer();
 error NotRequestedToken();
