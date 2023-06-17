@@ -34,6 +34,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
     Level[] public levels;
 
+    // for easy lookup
+    mapping(address => uint256) public tokenOf;
+
     constructor(address tokenCollectionAddress) ERC721A("FriendshipCard", "FRIEND") {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
@@ -42,10 +45,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     }
 
     function mintTo(address to) external onlyCollection {
+        tokenOf[to] = _nextTokenId();
         _mint(to, 1);
     }
 
     function burnToken(uint256 tokenId) public {
+        delete tokenOf[ownerOf(tokenId)];
         _burn(tokenId, true);
     }
 
