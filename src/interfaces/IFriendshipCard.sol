@@ -18,6 +18,11 @@ interface IFriendshipCard {
      */
     error LevelMinimumLowerThanExisting();
 
+    /**
+     * incorrect params given
+     */
+    error InvalidParams();
+
     function registerTokenMovement(address from, address to, uint256 collectionTokenStartId, uint256 quantity)
         external;
 

@@ -197,6 +197,80 @@ contract FriendshipCardTest is Test {
         assertEq(maxCap, nonon.totalSupply() * 2);
     }
 
+    function testTokenPointsInRange() public {
+        address minterOne = vm.addr(309);
+        address minterTwo = vm.addr(310);
+        address minterThree = vm.addr(311);
+
+        nonon.mint(minterOne, 5);
+        nonon.mint(minterTwo, 2);
+        nonon.mint(minterThree, 1);
+
+        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
+
+        assertEq(allPoints[0].owner, minterOne);
+        assertEq(allPoints[1].owner, minterTwo);
+        assertEq(allPoints[2].owner, minterThree);
+
+        assertEq(allPoints[0].points, 5);
+        assertEq(allPoints[1].points, 2);
+        assertEq(allPoints[2].points, 1);
+    }
+
+    function testTokenPointsInRangeMax() public {
+        address minterOne = vm.addr(309);
+        address minterTwo = vm.addr(310);
+        address minterThree = vm.addr(311);
+
+        nonon.mint(minterOne, 5);
+        nonon.mint(minterTwo, 2);
+        nonon.mint(minterThree, 1);
+
+        for (uint i = 1; i < 2501; i++) {
+            address newAddr = vm.addr(i);
+            nonon.mint(newAddr, 1);
+        }
+
+        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 100);
+
+        assertEq(allPoints[0].owner, minterOne);
+        assertEq(allPoints[1].owner, minterTwo);
+        assertEq(allPoints[2].owner, minterThree);
+
+        assertEq(allPoints[0].points, 6);
+        assertEq(allPoints[1].points, 3);
+        assertEq(allPoints[2].points, 2);
+    }
+
+    function testTokenPointsInRangeWorksIfIncludingBurned() public {
+        address minterOne = vm.addr(319);
+        address minterTwo = vm.addr(320);
+        address minterThree = vm.addr(321);
+
+        nonon.mint(minterOne, 5);
+        nonon.mint(minterTwo, 2);
+        nonon.mint(minterThree, 1);
+
+        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
+
+        assertEq(allPoints[0].owner, minterOne);
+        assertEq(allPoints[1].owner, minterTwo);
+        assertEq(allPoints[2].owner, minterThree);
+
+        assertEq(allPoints[0].points, 5);
+        assertEq(allPoints[1].points, 2);
+        assertEq(allPoints[2].points, 1);
+
+        vm.prank(minterTwo);
+        friendshipCard.burnToken(2);
+
+        FriendshipCard.TokenPoints[] memory newPoints = friendshipCard.tokenPointsInRange(1, 3);
+
+        assertEq(newPoints[0].owner, minterOne);
+        assertEq(newPoints[1].owner, minterThree);
+        assertEq(newPoints[1].points, 1);
+    }
+
     function testHasReceivedToken() public {
         address minter = vm.addr(300);
         nonon.mint(minter, 1);

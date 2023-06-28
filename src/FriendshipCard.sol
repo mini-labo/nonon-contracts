@@ -32,7 +32,14 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         string imageURI;
     }
 
+    // the evolution levels of the token
     Level[] public levels;
+
+    struct TokenPoints {
+        uint256 id;
+        address owner;
+        uint256 points;
+    }
 
     // for easy lookup
     mapping(address => uint256) public tokenOf;
@@ -142,6 +149,32 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         uint256 max = IERC721A(collectionAddress).totalSupply() + 1;
 
         return receivedBitmap[owner].popCount(1, max) + sentBitmap[owner].popCount(1, max);
+    }
+
+    // get point information in a token range
+    function tokenPointsInRange(uint256 startId, uint256 endId) public view returns (TokenPoints[] memory) {
+        if (endId < startId) revert InvalidParams();
+
+        TokenPoints[] memory tokenPoints = new TokenPoints[]((endId - startId) + 1);
+        uint256 max = IERC721A(collectionAddress).totalSupply() + 1;
+
+        uint256 pointsIndex;
+        for (uint256 i = startId; i <= endId;) {
+            if (_exists(i)) {
+                address owner = ownerOf(i);
+                uint256 points = receivedBitmap[owner].popCount(1, max) + sentBitmap[owner].popCount(1, max);
+
+                tokenPoints[pointsIndex] = TokenPoints({
+                    id: i,
+                    owner: owner,
+                    points: points
+                });
+                ++pointsIndex;
+            }
+            ++i;
+        }
+
+        return tokenPoints;
     }
 
     // check if given address is a holder of the token
