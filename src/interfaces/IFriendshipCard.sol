@@ -23,6 +23,11 @@ interface IFriendshipCard {
      */
     error InvalidParams();
 
+    /**
+     * message exceeds size limit
+     */
+    error MessageTooLong();
+
     function registerTokenMovement(address from, address to, uint256 collectionTokenStartId, uint256 quantity)
         external;
 

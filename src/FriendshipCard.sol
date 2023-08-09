@@ -22,8 +22,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
     // PLACEHOLDER VALUES
     string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
-    string public constant TOKEN_DESCRIPTION = "your friendship card";
-    string public constant BASE_IMAGE = "https://pbs.twimg.com/media/Fh-bK3MaMAY0rCv?format=jpg&name=medium";
+    string public constant DEFAULT_DESC = "friends forever";
 
     address public immutable collectionAddress;
 
@@ -48,10 +47,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // for easy lookup
     mapping(address => uint256) public tokenOf;
 
+    // user messages (tokenId => message)
+    mapping(uint256 => string) public messages;
+
     constructor(address tokenCollectionAddress, bytes memory baseImage) ERC721A("FriendshipCard", "FRIEND") {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
-
         baseSvgPointer = SSTORE2.write(baseImage);
 
         levels.push(Level(0, "LEVEL 1", "#2EB4FF"));
@@ -74,6 +75,14 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         _burn(tokenId, true);
     }
 
+    // set custom message for a token
+    function setMessage(uint256 _tokenId, string calldata _message) public {
+        if (ownerOf(_tokenId) != msg.sender) revert Unauthorized();
+        if (bytes(_message).length > 256) revert MessageTooLong();
+
+        messages[_tokenId] = _message;
+    }
+
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
@@ -91,7 +100,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                             string.concat(TOKEN_NAME, nameSuffix),
                             '",',
                             '"description":"',
-                            TOKEN_DESCRIPTION,
+                            tokenMessage(tokenId),
                             '",',
                             '"attributes":[{"trait_type":"points","max_value":',
                             _toString(levelCap),
@@ -106,6 +115,15 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                 )
             )
         );
+    }
+
+    function tokenMessage(uint256 tokenId) public view returns (string memory) {
+        string memory message = messages[tokenId];
+        if (bytes(message).length > 0) {
+            return message;
+        } else {
+            return DEFAULT_DESC;
+        }
     }
 
     // construct image svg
@@ -150,10 +168,6 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                 --i;
             }
         }
-
-        // fallback TODO: remove this
-        uint256 maxCollectionPoints = IERC721A(collectionAddress).totalSupply() * 2;
-        return ("LEVEL 1", BASE_IMAGE, maxCollectionPoints);
     }
 
     // prevent transfer (except mint and burn)
