@@ -13,12 +13,8 @@ contract DeployScript is Script {
         vm.startBroadcast(deployerPK);
 
         Nonon nonon = new Nonon();
-        FriendshipCard friendshipCard = new FriendshipCard(address(nonon));
+        FriendshipCard friendshipCard = new FriendshipCard(address(nonon), bytes(vm.readFile("test/fixtures/base.svg")));
         nonon.setFriendshipCard(address(friendshipCard));
-
-        friendshipCard.appendLevel(10, "LEVEL 2", "https://pbs.twimg.com/media/Fii3D6SVIAAYxtQ?format=jpg&name=large");
-
-        new NononSwap(address(nonon));
 
         vm.stopBroadcast();
     }
