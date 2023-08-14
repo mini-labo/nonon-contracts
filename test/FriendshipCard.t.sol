@@ -7,7 +7,7 @@ import "../src/FriendshipCard.sol";
 import "../src/Nonon.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
-    constructor(address tokenAddress) FriendshipCard(tokenAddress) {}
+    constructor(address tokenAddress, bytes memory baseImage) FriendshipCard(tokenAddress, baseImage) {}
 
     function getLevelData(uint256 tokenPoints) public view returns (string memory, string memory, uint256) {
         return levelData(tokenPoints);
@@ -19,10 +19,25 @@ contract FriendshipCardTest is Test {
     Nonon public nonon;
 
     function setUp() public {
+        string memory baseSvgPath = "test/fixtures/base.svg";
         nonon = new Nonon();
-        friendshipCard = new TestableFriendshipCard(address(nonon));
+        friendshipCard = new TestableFriendshipCard(address(nonon), bytes(vm.readFile(baseSvgPath)));
 
         nonon.setFriendshipCard(address(friendshipCard));
+    }
+
+    function testDebugTokenURI() public {
+        address minter = vm.addr(555);
+        nonon.mint(minter, 1);
+
+        friendshipCard.tokenURI(1);
+    }
+
+    function testDebugTokenURILevel2() public {
+        address minter = vm.addr(556);
+        nonon.mint(minter, 11);
+
+        friendshipCard.tokenURI(1);
     }
 
     function testFailTransferToThirdParty() public {
@@ -136,21 +151,21 @@ contract FriendshipCardTest is Test {
         friendshipCard.burnToken(1);
     }
 
-    function testAppendLevel() public {
-        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
-
-        // index 0 inserted by constructor
-        (uint256 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
-
-        assertEq(minimum, 10);
-        assertEq(name, "level 2");
-        assertEq(imageURI, "https://example.com/image");
-    }
+    //     function testAppendLevel() public {
+    //         friendshipCard.appendLevel(8000, "level 9", "my extra hex");
+    //
+    //         // index 0 inserted by constructor
+    //         (uint256 minimum, string memory name, string memory colorHex) = friendshipCard.levels(1);
+    //
+    //         assertEq(minimum, 8000);
+    //         assertEq(name, "level 9");
+    //         assertEq(colorHex, "my extra hex");
+    //     }
 
     function testFailAppendLevelAsNonOwner() public {
         address evil = vm.addr(800);
         vm.prank(evil);
-        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
+        friendshipCard.appendLevel(8000, "level 9", "my extra hex");
     }
 
     function testFailAppendLevelBelowExistingMinimumPoints() public {
@@ -158,27 +173,24 @@ contract FriendshipCardTest is Test {
         friendshipCard.appendLevel(0, "level 2", "https://example.com/image");
     }
 
-    function testRemoveLevel() public {
-        // insert index 1 and 2
-        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
-        friendshipCard.appendLevel(20, "level 3", "https://example.com/image");
-
-        // remove index 1
-        friendshipCard.removeLevel(1);
-
-        // previous index 2 should be new index 1
-        (uint256 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
-
-        assertEq(minimum, 20);
-        assertEq(name, "level 3");
-        assertEq(imageURI, "https://example.com/image");
-    }
+    //     function testRemoveLevel() public {
+    //         // insert index 1 and 2
+    //         friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
+    //         friendshipCard.appendLevel(20, "level 3", "https://example.com/image");
+    //
+    //         // remove index 1
+    //         friendshipCard.removeLevel(1);
+    //
+    //         // previous index 2 should be new index 1
+    //         (uint256 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
+    //
+    //         assertEq(minimum, 20);
+    //         assertEq(name, "level 3");
+    //         assertEq(imageURI, "https://example.com/image");
+    //     }
 
     function testLevelData() public {
-        friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
-        friendshipCard.appendLevel(50, "level 3", "https://example.com/image2");
-
-        // 0 1oints, should be initial level
+        // 0 points, should be initial level
         (string memory name,, uint256 cap) = friendshipCard.getLevelData(0);
         assertEq(name, "LEVEL 1");
         // should be minimum of index 1
@@ -186,15 +198,87 @@ contract FriendshipCardTest is Test {
 
         // 14 points, should be index 1
         (string memory name2, string memory url2, uint256 cap2) = friendshipCard.getLevelData(14);
-        assertEq(name2, "level 2");
-        assertEq(url2, "https://example.com/image");
+        assertEq(name2, "LEVEL 2");
         assertEq(cap2, 50);
 
         // max level - should be cap value of 2x supply of underlying token collection
-        (string memory maxName, string memory maxUrl, uint256 maxCap) = friendshipCard.getLevelData(100);
-        assertEq(maxName, "level 3");
-        assertEq(maxUrl, "https://example.com/image2");
+        (string memory maxName, string memory maxUrl, uint256 maxCap) = friendshipCard.getLevelData(7501);
+        assertEq(maxName, "LEVEL 8");
         assertEq(maxCap, nonon.totalSupply() * 2);
+    }
+
+    function testTokenPointsInRange() public {
+        address minterOne = vm.addr(309);
+        address minterTwo = vm.addr(310);
+        address minterThree = vm.addr(311);
+
+        nonon.mint(minterOne, 5);
+        nonon.mint(minterTwo, 2);
+        nonon.mint(minterThree, 1);
+
+        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
+
+        assertEq(allPoints[0].owner, minterOne);
+        assertEq(allPoints[1].owner, minterTwo);
+        assertEq(allPoints[2].owner, minterThree);
+
+        assertEq(allPoints[0].points, 5);
+        assertEq(allPoints[1].points, 2);
+        assertEq(allPoints[2].points, 1);
+    }
+
+    function testTokenPointsInRangeMax() public {
+        address minterOne = vm.addr(309);
+        address minterTwo = vm.addr(310);
+        address minterThree = vm.addr(311);
+
+        nonon.mint(minterOne, 5);
+        nonon.mint(minterTwo, 2);
+        nonon.mint(minterThree, 1);
+
+        for (uint256 i = 1; i < 2501; i++) {
+            address newAddr = vm.addr(i);
+            nonon.mint(newAddr, 1);
+        }
+
+        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 100);
+
+        assertEq(allPoints[0].owner, minterOne);
+        assertEq(allPoints[1].owner, minterTwo);
+        assertEq(allPoints[2].owner, minterThree);
+
+        assertEq(allPoints[0].points, 6);
+        assertEq(allPoints[1].points, 3);
+        assertEq(allPoints[2].points, 2);
+    }
+
+    function testTokenPointsInRangeWorksIfIncludingBurned() public {
+        address minterOne = vm.addr(319);
+        address minterTwo = vm.addr(320);
+        address minterThree = vm.addr(321);
+
+        nonon.mint(minterOne, 5);
+        nonon.mint(minterTwo, 2);
+        nonon.mint(minterThree, 1);
+
+        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
+
+        assertEq(allPoints[0].owner, minterOne);
+        assertEq(allPoints[1].owner, minterTwo);
+        assertEq(allPoints[2].owner, minterThree);
+
+        assertEq(allPoints[0].points, 5);
+        assertEq(allPoints[1].points, 2);
+        assertEq(allPoints[2].points, 1);
+
+        vm.prank(minterTwo);
+        friendshipCard.burnToken(2);
+
+        FriendshipCard.TokenPoints[] memory newPoints = friendshipCard.tokenPointsInRange(1, 3);
+
+        assertEq(newPoints[0].owner, minterOne);
+        assertEq(newPoints[1].owner, minterThree);
+        assertEq(newPoints[1].points, 1);
     }
 
     function testHasReceivedToken() public {

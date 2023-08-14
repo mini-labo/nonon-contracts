@@ -7,7 +7,7 @@ import "../src/FriendshipCard.sol";
 import "../src/NononSwap.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
-    constructor(address tokenAddress) FriendshipCard(tokenAddress) {}
+    constructor(address tokenAddress, bytes memory baseSvg) FriendshipCard(tokenAddress, baseSvg) {}
 
     function getLevelData(uint256 tokenPoints) public view returns (string memory, string memory, uint256) {
         return levelData(tokenPoints);
@@ -21,7 +21,7 @@ contract NononSwapTest is Test {
 
     function setUp() public {
         nonon = new Nonon();
-        friendshipCard = new TestableFriendshipCard(address(nonon));
+        friendshipCard = new TestableFriendshipCard(address(nonon), bytes(""));
         nonon.setFriendshipCard(address(friendshipCard));
 
         nononSwap = new NononSwap(address(nonon));
