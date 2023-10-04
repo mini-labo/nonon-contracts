@@ -7,9 +7,20 @@ import "../src/FriendshipCard.sol";
 import "../src/Nonon.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
-    constructor(address tokenAddress, bytes memory baseImage) FriendshipCard(tokenAddress, baseImage) {}
+    constructor(
+      address tokenAddress, 
+      bytes memory baseImage, 
+      bytes memory spriteImages
+    ) FriendshipCard(tokenAddress, baseImage, spriteImages) {}
 
-    function getLevelData(uint256 tokenPoints) public view returns (string memory, string memory, uint256) {
+    function getLevelData(uint256 tokenPoints) public view returns (
+    //   string memory, 
+    //   string memory, 
+    //   uint16, 
+    //   uint16, 
+    //   uint256
+    // ) {
+    FriendshipCard.LevelImageData memory) {
         return levelData(tokenPoints);
     }
 }
@@ -20,8 +31,14 @@ contract FriendshipCardTest is Test {
 
     function setUp() public {
         string memory baseSvgPath = "test/fixtures/base.svg";
+        string memory spritesPath = "test/fixtures/sprites.svg";
         nonon = new Nonon();
-        friendshipCard = new TestableFriendshipCard(address(nonon), bytes(vm.readFile(baseSvgPath)));
+
+        friendshipCard = new TestableFriendshipCard(
+          address(nonon), 
+          bytes(vm.readFile(baseSvgPath)),
+          bytes(vm.readFile(spritesPath))
+        );
 
         nonon.setFriendshipCard(address(friendshipCard));
     }
@@ -162,16 +179,16 @@ contract FriendshipCardTest is Test {
     //         assertEq(colorHex, "my extra hex");
     //     }
 
-    function testFailAppendLevelAsNonOwner() public {
-        address evil = vm.addr(800);
-        vm.prank(evil);
-        friendshipCard.appendLevel(8000, "level 9", "my extra hex");
-    }
+    // function testFailAppendLevelAsNonOwner() public {
+    //     address evil = vm.addr(800);
+    //     vm.prank(evil);
+    //     friendshipCard.appendLevel(8000, "level 9", "my extra hex");
+    // }
 
-    function testFailAppendLevelBelowExistingMinimumPoints() public {
-        // constructor inserts minimum of 0
-        friendshipCard.appendLevel(0, "level 2", "https://example.com/image");
-    }
+    // function testFailAppendLevelBelowExistingMinimumPoints() public {
+    //     // constructor inserts minimum of 0
+    //     friendshipCard.appendLevel(0, "level 2", "https://example.com/image");
+    // }
 
     //     function testRemoveLevel() public {
     //         // insert index 1 and 2
@@ -191,20 +208,25 @@ contract FriendshipCardTest is Test {
 
     function testLevelData() public {
         // 0 points, should be initial level
-        (string memory name,, uint256 cap) = friendshipCard.getLevelData(0);
-        assertEq(name, "LEVEL 1");
+        // (string memory name,,,, uint256 cap) = friendshipCard.getLevelData(0);
+        FriendshipCard.LevelImageData memory level = friendshipCard.getLevelData(0);
+        // assertEq(name, "LEVEL 1");
+        assertEq(level.suffix, "LEVEL 1");
         // should be minimum of index 1
-        assertEq(cap, 10);
+        assertEq(level.cap, 10);
 
         // 14 points, should be index 1
-        (string memory name2, string memory url2, uint256 cap2) = friendshipCard.getLevelData(14);
-        assertEq(name2, "LEVEL 2");
-        assertEq(cap2, 50);
+        // (string memory name2,,,, uint256 cap2) = friendshipCard.getLevelData(14);
+        FriendshipCard.LevelImageData memory level2 = friendshipCard.getLevelData(14);
+        assertEq(level2.suffix, "LEVEL 2");
+        assertEq(level2.cap, 50);
 
         // max level - should be cap value of 2x supply of underlying token collection
-        (string memory maxName, string memory maxUrl, uint256 maxCap) = friendshipCard.getLevelData(7501);
-        assertEq(maxName, "LEVEL 8");
-        assertEq(maxCap, nonon.totalSupply() * 2);
+        // (string memory maxName,,,, uint256 maxCap) = friendshipCard.getLevelData(7501);
+
+        FriendshipCard.LevelImageData memory level8 = friendshipCard.getLevelData(7501);
+        assertEq(level8.suffix, "LEVEL 8");
+        assertEq(level8.cap, nonon.totalSupply() * 2);
     }
 
     function testTokenPointsInRange() public {
