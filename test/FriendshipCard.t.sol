@@ -7,20 +7,11 @@ import "../src/FriendshipCard.sol";
 import "../src/Nonon.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
-    constructor(
-      address tokenAddress, 
-      bytes memory baseImage, 
-      bytes memory spriteImages
-    ) FriendshipCard(tokenAddress, baseImage, spriteImages) {}
+    constructor(address tokenAddress, bytes memory baseImage, bytes memory spriteImages)
+        FriendshipCard(tokenAddress, baseImage, spriteImages)
+    {}
 
-    function getLevelData(uint256 tokenPoints) public view returns (
-    //   string memory, 
-    //   string memory, 
-    //   uint16, 
-    //   uint16, 
-    //   uint256
-    // ) {
-    FriendshipCard.LevelImageData memory) {
+    function getLevelData(uint256 tokenPoints) public view returns (FriendshipCard.LevelImageData memory) {
         return levelData(tokenPoints);
     }
 }
@@ -167,44 +158,6 @@ contract FriendshipCardTest is Test {
         vm.prank(evil);
         friendshipCard.burnToken(1);
     }
-
-    //     function testAppendLevel() public {
-    //         friendshipCard.appendLevel(8000, "level 9", "my extra hex");
-    //
-    //         // index 0 inserted by constructor
-    //         (uint256 minimum, string memory name, string memory colorHex) = friendshipCard.levels(1);
-    //
-    //         assertEq(minimum, 8000);
-    //         assertEq(name, "level 9");
-    //         assertEq(colorHex, "my extra hex");
-    //     }
-
-    // function testFailAppendLevelAsNonOwner() public {
-    //     address evil = vm.addr(800);
-    //     vm.prank(evil);
-    //     friendshipCard.appendLevel(8000, "level 9", "my extra hex");
-    // }
-
-    // function testFailAppendLevelBelowExistingMinimumPoints() public {
-    //     // constructor inserts minimum of 0
-    //     friendshipCard.appendLevel(0, "level 2", "https://example.com/image");
-    // }
-
-    //     function testRemoveLevel() public {
-    //         // insert index 1 and 2
-    //         friendshipCard.appendLevel(10, "level 2", "https://example.com/image");
-    //         friendshipCard.appendLevel(20, "level 3", "https://example.com/image");
-    //
-    //         // remove index 1
-    //         friendshipCard.removeLevel(1);
-    //
-    //         // previous index 2 should be new index 1
-    //         (uint256 minimum, string memory name, string memory imageURI) = friendshipCard.levels(1);
-    //
-    //         assertEq(minimum, 20);
-    //         assertEq(name, "level 3");
-    //         assertEq(imageURI, "https://example.com/image");
-    //     }
 
     function testLevelData() public {
         // 0 points, should be initial level

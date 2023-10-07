@@ -7,11 +7,9 @@ import "../src/FriendshipCard.sol";
 import "../src/NononSwap.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
-    constructor(
-      address tokenAddress, 
-      bytes memory baseSvg, 
-      bytes memory spritesSvg
-    ) FriendshipCard(tokenAddress, baseSvg, spritesSvg) {}
+    constructor(address tokenAddress, bytes memory baseSvg, bytes memory spritesSvg)
+        FriendshipCard(tokenAddress, baseSvg, spritesSvg)
+    {}
 
     function getLevelData(uint256 tokenPoints) public view returns (FriendshipCard.LevelImageData memory) {
         return levelData(tokenPoints);

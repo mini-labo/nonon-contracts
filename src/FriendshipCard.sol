@@ -11,7 +11,6 @@ import "solady/utils/Base64.sol";
 import "solady/utils/SSTORE2.sol";
 import "solady/utils/LibBitmap.sol";
 
-
 import "./interfaces/IFriendshipCard.sol";
 
 contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
@@ -43,7 +42,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     struct LevelImageData {
         string suffix;
         string colorHex;
-        uint16 spriteIndex; 
+        uint16 spriteIndex;
         uint16 spriteLength;
         uint256 cap;
     }
@@ -63,7 +62,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // user messages (tokenId => message)
     mapping(uint256 => string) public messages;
 
-    constructor(address tokenCollectionAddress, bytes memory baseImage, bytes memory spriteImages) ERC721A("FriendshipCard", "FRIEND") {
+    constructor(address tokenCollectionAddress, bytes memory baseImage, bytes memory spriteImages)
+        ERC721A("FriendshipCard", "FRIEND")
+    {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
         baseSvgPointer = SSTORE2.write(baseImage);
@@ -81,6 +82,8 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
     function mintTo(address to) external onlyCollection {
         tokenOf[to] = _nextTokenId();
+        emit Locked(_nextTokenId());
+
         _mint(to, 1);
     }
 
@@ -95,6 +98,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         if (bytes(_message).length > 256) revert MessageTooLong();
 
         messages[_tokenId] = _message;
+        emit MetadataUpdate(_tokenId);
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -142,12 +146,11 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     }
 
     // construct image svg
-    function buildSvg(
-      string memory colorHex, 
-      uint16 spriteIndex, 
-      uint16 spriteLength, 
-      string memory message
-    ) internal view returns (string memory) {
+    function buildSvg(string memory colorHex, uint16 spriteIndex, uint16 spriteLength, string memory message)
+        internal
+        view
+        returns (string memory)
+    {
         string memory baseUrl = "data:image/svg+xml;base64,";
         bytes memory baseSvg = SSTORE2.read(baseSvgPointer);
         bytes memory spritesSvg = SSTORE2.read(spritesPointer);
@@ -165,8 +168,8 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                             getSpriteSubstring(spritesSvg, spriteIndex, spriteLength),
                             '</g></g></g><text xml:space="preserve" fill="#009DF5" font-family="Courier" font-size="24" letter-spacing="0em" style="white-space:pre"><tspan x="144" y="1044.9">',
                             message,
-                            '</tspan></text>',
-                            '</svg>'
+                            "</tspan></text>",
+                            "</svg>"
                         )
                     )
                 )
@@ -174,15 +177,15 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         );
     }
 
-    function getSpriteSubstring(
-      bytes memory spritesSvg, 
-      uint16 spriteIndex, 
-      uint16 spriteLength
-    ) internal pure returns (bytes memory) {
+    function getSpriteSubstring(bytes memory spritesSvg, uint16 spriteIndex, uint16 spriteLength)
+        internal
+        pure
+        returns (bytes memory)
+    {
         bytes memory sprite = new bytes(spriteLength);
 
         for (uint256 i = 0; i < sprite.length; i++) {
-            sprite[i] = spritesSvg[i + spriteIndex];   
+            sprite[i] = spritesSvg[i + spriteIndex];
         }
 
         return sprite;
@@ -196,7 +199,9 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                 if (i < levels.length) {
                     // there is at least one level above current, so get its minimum
                     Level memory nextLevel = levels[i];
-                    return LevelImageData(level.name, level.colorHex, level.spriteIndex, level.spriteLength, nextLevel.minimum);
+                    return LevelImageData(
+                        level.name, level.colorHex, level.spriteIndex, level.spriteLength, nextLevel.minimum
+                    );
                 } else {
                     // highest level
                     uint256 maxPoints = IERC721A(collectionAddress).totalSupply() * 2;
@@ -230,6 +235,8 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
         if (to != address(0)) {
             receivedBitmap[to].setBatch(collectionTokenStartId, quantity);
         }
+
+        emit BatchMetadataUpdate(1, type(uint256).max);
     }
 
     // total points accumulated by a holder
