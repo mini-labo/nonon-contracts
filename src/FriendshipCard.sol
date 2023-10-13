@@ -22,14 +22,16 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
     // PLACEHOLDER VALUES
     string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
-    string public constant DEFAULT_DESC = "an idiot admires complexity; a genius admires simplicity";
+    string public constant DEFAULT_DESC = "hello friends";
 
     address public immutable collectionAddress;
 
     // address where bytes for base SVG are stored
     address private baseSvgPointer;
+    // address where bytes for svg defs are stored
+    address private defsSvgPointer;
     // address where level sprites are stored
-    address private spritesPointer;
+    address private spritesSvgPointer;
 
     struct Level {
         uint256 minimum;
@@ -62,29 +64,37 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // user messages (tokenId => message)
     mapping(uint256 => string) public messages;
 
-    constructor(address tokenCollectionAddress, bytes memory baseImage, bytes memory spriteImages)
-        ERC721A("FriendshipCard", "FRIEND")
-    {
+    constructor(address tokenCollectionAddress) ERC721A("FriendshipCard", "FRIEND") {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
-        baseSvgPointer = SSTORE2.write(baseImage);
-        spritesPointer = SSTORE2.write(spriteImages);
 
-        levels.push(Level(0, "LEVEL 1", "#2EB4FF", 0, 219));
-        levels.push(Level(10, "LEVEL 2", "#FF5733", 219, 216));
-        levels.push(Level(50, "LEVEL 3", "#2EB4FF", 0, 219));
-        levels.push(Level(150, "LEVEL 4", "#2EB4FF", 0, 219));
-        levels.push(Level(500, "LEVEL 5", "#2EB4FF", 0, 219));
-        levels.push(Level(1500, "LEVEL 6", "#2EB4FF", 0, 219));
-        levels.push(Level(3500, "LEVEL 7", "#2EB4FF", 0, 219));
-        levels.push(Level(7500, "LEVEL 8", "#2EB4FF", 0, 219));
+        levels.push(Level(0, "LEVEL 1", "grad-1", 0, 288));
+        levels.push(Level(10, "LEVEL 2", "grad-2", 288, 652));
+        levels.push(Level(50, "LEVEL 3", "grad-3", 940, 758));
+        levels.push(Level(150, "LEVEL 4", "grad-4", 1698, 646));
+        levels.push(Level(500, "LEVEL 5", "grad-5", 2344, 984));
+        levels.push(Level(1500, "LEVEL 6", "grad-6", 3328, 817));
+        levels.push(Level(3500, "LEVEL 7", "grad-7", 4145, 758));
+        levels.push(Level(7500, "LEVEL 8", "grad-8", 4903, 709));
     }
+
+    function setBaseSvgPointer(bytes memory baseImage) public onlyOwner {
+        baseSvgPointer = SSTORE2.write(baseImage);
+    }
+
+    function setDefsSvgPointer(bytes memory defs) public onlyOwner {
+        defsSvgPointer = SSTORE2.write(defs);
+    }
+
+    function setSpritesSvgPointer(bytes memory spriteImages) public onlyOwner {
+        spritesSvgPointer = SSTORE2.write(spriteImages);
+    }
+
 
     function mintTo(address to) external onlyCollection {
         tokenOf[to] = _nextTokenId();
-        emit Locked(_nextTokenId());
-
         _mint(to, 1);
+        emit Locked(_nextTokenId());
     }
 
     function burnToken(uint256 tokenId) public {
@@ -153,7 +163,8 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     {
         string memory baseUrl = "data:image/svg+xml;base64,";
         bytes memory baseSvg = SSTORE2.read(baseSvgPointer);
-        bytes memory spritesSvg = SSTORE2.read(spritesPointer);
+        bytes memory spritesSvg = SSTORE2.read(spritesSvgPointer);
+        bytes memory defs = SSTORE2.read(defsSvgPointer);
 
         return string(
             abi.encodePacked(
@@ -161,14 +172,16 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                 Base64.encode(
                     bytes(
                         abi.encodePacked(
-                            '<svg fill="none" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg"><path fill="',
+                            '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 1080 1080"><path fill="rgba(255,255,255,0)" d="M0 0h1080v1080H0z" />',
+                            '<path fill="url(#',
                             colorHex,
-                            '" d=\"M0 0h1080v1080H0z"/>',
+                            ')" d="M24 40a16 16 0 0 1 16-16h1000a16 16 0 0 1 16 16v914a16 16 0 0 1-16 16H114.5a24 24 0 0 0-17.6 7.7l-59 63.4a8 8 0 0 1-13.9-5.4V40Z" />',
                             baseSvg,
                             getSpriteSubstring(spritesSvg, spriteIndex, spriteLength),
-                            '</g></g></g><text xml:space="preserve" fill="#009DF5" font-family="Courier" font-size="24" letter-spacing="0em" style="white-space:pre"><tspan x="144" y="1044.9">',
+                            '<text xml:space="preserve" fill="#009DF5" font-family="Courier" font-size="24" letter-spacing="0em" style="white-space:pre"><tspan x="144" y="1044.9">',
                             message,
                             "</tspan></text>",
+                            defs,
                             "</svg>"
                         )
                     )

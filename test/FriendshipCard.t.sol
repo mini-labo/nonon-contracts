@@ -7,9 +7,7 @@ import "../src/FriendshipCard.sol";
 import "../src/Nonon.sol";
 
 contract TestableFriendshipCard is FriendshipCard {
-    constructor(address tokenAddress, bytes memory baseImage, bytes memory spriteImages)
-        FriendshipCard(tokenAddress, baseImage, spriteImages)
-    {}
+    constructor(address tokenAddress) FriendshipCard(tokenAddress) {}
 
     function getLevelData(uint256 tokenPoints) public view returns (FriendshipCard.LevelImageData memory) {
         return levelData(tokenPoints);
@@ -22,14 +20,15 @@ contract FriendshipCardTest is Test {
 
     function setUp() public {
         string memory baseSvgPath = "test/fixtures/base.svg";
+        string memory defsSvgPath = "test/fixtures/defs.svg";
         string memory spritesPath = "test/fixtures/sprites.svg";
         nonon = new Nonon();
 
-        friendshipCard = new TestableFriendshipCard(
-          address(nonon), 
-          bytes(vm.readFile(baseSvgPath)),
-          bytes(vm.readFile(spritesPath))
-        );
+        friendshipCard = new TestableFriendshipCard(address(nonon));
+
+        friendshipCard.setBaseSvgPointer(bytes(vm.readFile(baseSvgPath)));
+        friendshipCard.setDefsSvgPointer(bytes(vm.readFile(defsSvgPath)));
+        friendshipCard.setSpritesSvgPointer(bytes(vm.readFile(spritesPath)));
 
         nonon.setFriendshipCard(address(friendshipCard));
     }
