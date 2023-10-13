@@ -28,10 +28,13 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
 
     // address where bytes for base SVG are stored
     address private baseSvgPointer;
+    bool private baseSvgPointerLocked;
     // address where bytes for svg defs are stored
     address private defsSvgPointer;
+    bool private defsSvgPointerLocked;
     // address where level sprites are stored
     address private spritesSvgPointer;
+    bool private spritesSvgPointerLocked;
 
     struct Level {
         uint256 minimum;
@@ -79,17 +82,25 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     }
 
     function setBaseSvgPointer(bytes memory baseImage) public onlyOwner {
+        if (baseSvgPointerLocked) revert SvgAlreadySet();
+
         baseSvgPointer = SSTORE2.write(baseImage);
+        baseSvgPointerLocked = true;
     }
 
     function setDefsSvgPointer(bytes memory defs) public onlyOwner {
+        if (defsSvgPointerLocked) revert SvgAlreadySet();
+
         defsSvgPointer = SSTORE2.write(defs);
+        defsSvgPointerLocked = true;
     }
 
     function setSpritesSvgPointer(bytes memory spriteImages) public onlyOwner {
-        spritesSvgPointer = SSTORE2.write(spriteImages);
-    }
+        if (spritesSvgPointerLocked) revert SvgAlreadySet();
 
+        spritesSvgPointer = SSTORE2.write(spriteImages);
+        spritesSvgPointerLocked = true;
+    }
 
     function mintTo(address to) external onlyCollection {
         tokenOf[to] = _nextTokenId();
