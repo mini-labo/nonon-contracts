@@ -13,12 +13,12 @@ contract DeployScript is Script {
         vm.startBroadcast(deployerPK);
 
         Nonon nonon = new Nonon();
-        FriendshipCard friendshipCard = new FriendshipCard(
-          address(nonon), 
-          bytes(vm.readFile("test/fixtures/base.svg")),
-          bytes(vm.readFile("test/fixtures/sprites.svg"))
-        );
+        FriendshipCard friendshipCard = new FriendshipCard(address(nonon));
         nonon.setFriendshipCard(address(friendshipCard));
+
+        friendshipCard.setBaseSvgPointer(bytes(vm.readFile("test/fixtures/base.svg")));
+        friendshipCard.setDefsSvgPointer(bytes(vm.readFile("test/fixtures/defs.svg")));
+        friendshipCard.setSpritesSvgPointer(bytes(vm.readFile("test/fixtures/sprites.svg")));
 
         vm.stopBroadcast();
     }

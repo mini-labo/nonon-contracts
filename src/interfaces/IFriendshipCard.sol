@@ -28,6 +28,16 @@ interface IFriendshipCard {
      */
     error MessageTooLong();
 
+    /**
+     * svg data already set
+     */
+    error SvgAlreadySet();
+
+    event MetadataUpdate(uint256 _tokenId);
+    event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId);
+
+    event Locked(uint256 tokenId);
+
     function registerTokenMovement(address from, address to, uint256 collectionTokenStartId, uint256 quantity)
         external;
 
