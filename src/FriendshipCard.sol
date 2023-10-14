@@ -103,9 +103,11 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     }
 
     function mintTo(address to) external onlyCollection {
-        tokenOf[to] = _nextTokenId();
+        uint256 id = _nextTokenId();
+        tokenOf[to] = id;
         _mint(to, 1);
-        emit Locked(_nextTokenId());
+
+        emit Locked(id);
     }
 
     function burnToken(uint256 tokenId) public {
