@@ -6,12 +6,12 @@ pragma solidity 0.8.16;
 
 import "ERC721A/ERC721A.sol";
 import "solady/auth/OwnableRoles.sol";
-import "./interfaces/IFriendshipCard.sol";
+import "./interfaces/INononFriendCard.sol";
 
 error FriendshipTokenZeroAddress();
 
 contract Nonon is ERC721A, OwnableRoles {
-    address private friendshipCardAddress;
+    address private friendCardAddress;
 
     event FriendshipTokenAddressSet(address caller, address newTokenAddress);
 
@@ -31,7 +31,7 @@ contract Nonon is ERC721A, OwnableRoles {
 
     function setFriendshipCard(address tokenAddress) external onlyOwner {
         if (tokenAddress == address(0)) revert FriendshipTokenZeroAddress();
-        friendshipCardAddress = tokenAddress;
+        friendCardAddress = tokenAddress;
 
         emit FriendshipTokenAddressSet(msg.sender, tokenAddress);
     }
@@ -44,7 +44,7 @@ contract Nonon is ERC721A, OwnableRoles {
         internal
         override
     {
-        IFriendshipCard friendshipCard = IFriendshipCard(friendshipCardAddress);
+        INononFriendCard friendshipCard = INononFriendCard(friendCardAddress);
 
         if (to != address(0) && !friendshipCard.hasToken(to)) {
             friendshipCard.mintTo(to);

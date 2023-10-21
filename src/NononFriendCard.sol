@@ -11,9 +11,9 @@ import "solady/utils/Base64.sol";
 import "solady/utils/SSTORE2.sol";
 import "solady/utils/LibBitmap.sol";
 
-import "./interfaces/IFriendshipCard.sol";
+import "./interfaces/INononFriendCard.sol";
 
-contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
+contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
     using LibBitmap for LibBitmap.Bitmap;
 
     // track tokens that have been collected by a given address
@@ -21,8 +21,8 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     mapping(address => LibBitmap.Bitmap) private sentBitmap;
 
     // PLACEHOLDER VALUES
-    string public constant TOKEN_NAME = "NONON FRIENDSHIP CARD ";
-    string public constant DEFAULT_DESC = "hello friends";
+    string public constant TOKEN_NAME = "NONON FRIEND CARD ";
+    string public constant DEFAULT_DESC = "share your message at nonon.house";
 
     address public immutable collectionAddress;
 
@@ -39,14 +39,14 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     struct Level {
         uint256 minimum;
         string name;
-        string colorHex;
+        string colorGradient;
         uint16 spriteIndex;
         uint16 spriteLength;
     }
 
     struct LevelImageData {
         string suffix;
-        string colorHex;
+        string colorGradient;
         uint16 spriteIndex;
         uint16 spriteLength;
         uint256 cap;
@@ -67,7 +67,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     // user messages (tokenId => message)
     mapping(uint256 => string) public messages;
 
-    constructor(address tokenCollectionAddress) ERC721A("FriendshipCard", "FRIEND") {
+    constructor(address tokenCollectionAddress) ERC721A("NononFriendCard", "NONON_FRIEND") {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
 
@@ -150,7 +150,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                             _toString(tokenPoints),
                             "}],",
                             '"image":"',
-                            buildSvg(level.colorHex, level.spriteIndex, level.spriteLength, message),
+                            buildSvg(level.colorGradient, level.spriteIndex, level.spriteLength, message),
                             '"}'
                         )
                     )
@@ -169,7 +169,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
     }
 
     // construct image svg
-    function buildSvg(string memory colorHex, uint16 spriteIndex, uint16 spriteLength, string memory message)
+    function buildSvg(string memory colorGradient, uint16 spriteIndex, uint16 spriteLength, string memory message)
         internal
         view
         returns (string memory)
@@ -187,7 +187,7 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                         abi.encodePacked(
                             '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 1080 1080"><path fill="rgba(255,255,255,0)" d="M0 0h1080v1080H0z" />',
                             '<path fill="url(#',
-                            colorHex,
+                            colorGradient,
                             ')" d="M24 40a16 16 0 0 1 16-16h1000a16 16 0 0 1 16 16v914a16 16 0 0 1-16 16H114.5a24 24 0 0 0-17.6 7.7l-59 63.4a8 8 0 0 1-13.9-5.4V40Z" />',
                             baseSvg,
                             getSpriteSubstring(spritesSvg, spriteIndex, spriteLength),
@@ -226,12 +226,12 @@ contract FriendshipCard is IFriendshipCard, ERC721A, OwnableRoles {
                     // there is at least one level above current, so get its minimum
                     Level memory nextLevel = levels[i];
                     return LevelImageData(
-                        level.name, level.colorHex, level.spriteIndex, level.spriteLength, nextLevel.minimum
+                        level.name, level.colorGradient, level.spriteIndex, level.spriteLength, nextLevel.minimum
                     );
                 } else {
                     // highest level
                     uint256 maxPoints = IERC721A(collectionAddress).totalSupply() * 2;
-                    return LevelImageData(level.name, level.colorHex, level.spriteIndex, level.spriteLength, maxPoints);
+                    return LevelImageData(level.name, level.colorGradient, level.spriteIndex, level.spriteLength, maxPoints);
                 }
             }
             unchecked {
