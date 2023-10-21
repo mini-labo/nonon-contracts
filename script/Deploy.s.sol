@@ -4,8 +4,7 @@ pragma solidity 0.8.16;
 
 import "forge-std/Script.sol";
 import "../src/Nonon.sol";
-import "../src/FriendshipCard.sol";
-import "../src/NononSwap.sol";
+import "../src/NononFriendCard.sol";
 
 contract DeployScript is Script {
     function run() external {
@@ -13,7 +12,7 @@ contract DeployScript is Script {
         vm.startBroadcast(deployerPK);
 
         Nonon nonon = new Nonon();
-        FriendshipCard friendshipCard = new FriendshipCard(address(nonon));
+        NononFriendCard friendshipCard = new NononFriendCard(address(nonon));
         nonon.setFriendshipCard(address(friendshipCard));
 
         friendshipCard.setBaseSvgPointer(bytes(vm.readFile("test/fixtures/base.svg")));

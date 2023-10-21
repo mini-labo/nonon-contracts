@@ -3,19 +3,19 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/Vm.sol";
-import "../src/FriendshipCard.sol";
+import "../src/NononFriendCard.sol";
 import "../src/Nonon.sol";
 
-contract TestableFriendshipCard is FriendshipCard {
-    constructor(address tokenAddress) FriendshipCard(tokenAddress) {}
+contract TestableFriendCard is NononFriendCard {
+    constructor(address tokenAddress) NononFriendCard(tokenAddress) {}
 
-    function getLevelData(uint256 tokenPoints) public view returns (FriendshipCard.LevelImageData memory) {
+    function getLevelData(uint256 tokenPoints) public view returns (NononFriendCard.LevelImageData memory) {
         return levelData(tokenPoints);
     }
 }
 
-contract FriendshipCardTest is Test {
-    TestableFriendshipCard public friendshipCard;
+contract NononFriendCardTest is Test {
+    TestableFriendCard public friendshipCard;
     Nonon public nonon;
 
     function setUp() public {
@@ -24,7 +24,7 @@ contract FriendshipCardTest is Test {
         string memory spritesPath = "test/fixtures/sprites.svg";
         nonon = new Nonon();
 
-        friendshipCard = new TestableFriendshipCard(address(nonon));
+        friendshipCard = new TestableFriendCard(address(nonon));
 
         friendshipCard.setBaseSvgPointer(bytes(vm.readFile(baseSvgPath)));
         friendshipCard.setDefsSvgPointer(bytes(vm.readFile(defsSvgPath)));
@@ -161,7 +161,7 @@ contract FriendshipCardTest is Test {
     function testLevelData() public {
         // 0 points, should be initial level
         // (string memory name,,,, uint256 cap) = friendshipCard.getLevelData(0);
-        FriendshipCard.LevelImageData memory level = friendshipCard.getLevelData(0);
+        NononFriendCard.LevelImageData memory level = friendshipCard.getLevelData(0);
         // assertEq(name, "LEVEL 1");
         assertEq(level.suffix, "LEVEL 1");
         // should be minimum of index 1
@@ -169,14 +169,14 @@ contract FriendshipCardTest is Test {
 
         // 14 points, should be index 1
         // (string memory name2,,,, uint256 cap2) = friendshipCard.getLevelData(14);
-        FriendshipCard.LevelImageData memory level2 = friendshipCard.getLevelData(14);
+        NononFriendCard.LevelImageData memory level2 = friendshipCard.getLevelData(14);
         assertEq(level2.suffix, "LEVEL 2");
         assertEq(level2.cap, 50);
 
         // max level - should be cap value of 2x supply of underlying token collection
         // (string memory maxName,,,, uint256 maxCap) = friendshipCard.getLevelData(7501);
 
-        FriendshipCard.LevelImageData memory level8 = friendshipCard.getLevelData(7501);
+        NononFriendCard.LevelImageData memory level8 = friendshipCard.getLevelData(7501);
         assertEq(level8.suffix, "LEVEL 8");
         assertEq(level8.cap, nonon.totalSupply() * 2);
     }
@@ -190,7 +190,7 @@ contract FriendshipCardTest is Test {
         nonon.mint(minterTwo, 2);
         nonon.mint(minterThree, 1);
 
-        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
+        NononFriendCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
 
         assertEq(allPoints[0].owner, minterOne);
         assertEq(allPoints[1].owner, minterTwo);
@@ -215,7 +215,7 @@ contract FriendshipCardTest is Test {
             nonon.mint(newAddr, 1);
         }
 
-        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 100);
+        NononFriendCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 100);
 
         assertEq(allPoints[0].owner, minterOne);
         assertEq(allPoints[1].owner, minterTwo);
@@ -235,7 +235,7 @@ contract FriendshipCardTest is Test {
         nonon.mint(minterTwo, 2);
         nonon.mint(minterThree, 1);
 
-        FriendshipCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
+        NononFriendCard.TokenPoints[] memory allPoints = friendshipCard.tokenPointsInRange(1, 3);
 
         assertEq(allPoints[0].owner, minterOne);
         assertEq(allPoints[1].owner, minterTwo);
@@ -248,7 +248,7 @@ contract FriendshipCardTest is Test {
         vm.prank(minterTwo);
         friendshipCard.burnToken(2);
 
-        FriendshipCard.TokenPoints[] memory newPoints = friendshipCard.tokenPointsInRange(1, 3);
+        NononFriendCard.TokenPoints[] memory newPoints = friendshipCard.tokenPointsInRange(1, 3);
 
         assertEq(newPoints[0].owner, minterOne);
         assertEq(newPoints[1].owner, minterThree);

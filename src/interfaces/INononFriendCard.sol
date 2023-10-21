@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.16;
 
-interface IFriendshipCard {
+interface INononFriendCard {
     /**
      * cannot transfer the soulbound token
      */
