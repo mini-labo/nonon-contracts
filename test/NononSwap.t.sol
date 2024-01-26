@@ -170,6 +170,28 @@ contract NononSwapTest is Test {
         assertEq(nononSwap.getAllAvailableOffers()[1].ownedId, 3);
     }
 
+    function testRemovingOfferDoesntDuplicateListingIndex() public {
+        address a = vm.addr(1);
+
+        nonon.mint(a, 5);
+
+        vm.startPrank(a);
+        nonon.approve(address(nononSwap), 1);
+        nonon.approve(address(nononSwap), 2);
+        nononSwap.createTokenOffer(1, 0);
+        nononSwap.createTokenOffer(2, 0);
+        nononSwap.createTokenOffer(3, 0);
+
+        nononSwap.removeOffer(2);
+        nononSwap.createTokenOffer(4, 0);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 3);
+        assertEq(nononSwap.getAllAvailableOffers()[0].listingIndex, 0);
+        assertEq(nononSwap.getAllAvailableOffers()[1].listingIndex, 1);
+        assertEq(nononSwap.getAllAvailableOffers()[2].listingIndex, 2);
+    }
+
     function testCanRemoveZeroIndexOffer() public {
         address a = vm.addr(1);
 

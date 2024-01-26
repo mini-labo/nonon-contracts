@@ -83,9 +83,14 @@ contract NononSwap {
             revert OfferForNonexistentToken();
         }
 
-        // remove offer
-        availableOffers[offer.listingIndex] = availableOffers[availableOffers.length - 1];
+        // Swap and pop
+        uint256 lastIndex = availableOffers.length - 1;
+        uint256 replaceIndex = offer.listingIndex;
+        offers[availableOffers[lastIndex].ownedId].listingIndex = replaceIndex;
+        availableOffers[replaceIndex] = availableOffers[lastIndex];
+        availableOffers[replaceIndex].listingIndex = replaceIndex;
         availableOffers.pop();
+
         delete offers[_offerTokenId];
 
         emit SwapCompleted(_offerTokenId, _swapId, offer.listingIndex);
@@ -108,7 +113,12 @@ contract NononSwap {
             revert NoActiveOffer();
         }
 
-        availableOffers[offer.listingIndex] = availableOffers[availableOffers.length - 1];
+        // Swap and pop
+        uint256 lastIndex = availableOffers.length - 1;
+        uint256 replaceIndex = offer.listingIndex;
+        offers[availableOffers[lastIndex].ownedId].listingIndex = replaceIndex;
+        availableOffers[replaceIndex] = availableOffers[lastIndex];
+        availableOffers[replaceIndex].listingIndex = replaceIndex;
         availableOffers.pop();
 
         delete offers[_tokenId];
