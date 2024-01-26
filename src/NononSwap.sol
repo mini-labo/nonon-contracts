@@ -14,23 +14,11 @@ contract NononSwap {
     address public immutable nononAddress;
 
     // events
-    event OfferCreated(
-        address indexed owner,
-        uint256 indexed ownedId, 
-        uint256 indexed wantedId,
-        uint256 listingIndex
-    );
+    event OfferCreated(address indexed owner, uint256 indexed ownedId, uint256 indexed wantedId, uint256 listingIndex);
     event OfferCancelled(
-        address indexed owner,
-        uint256 indexed ownedId,
-        uint256 indexed wantedId,
-        uint256 listingIndex
+        address indexed owner, uint256 indexed ownedId, uint256 indexed wantedId, uint256 listingIndex
     );
-    event SwapCompleted(
-        uint256 indexed firstTokenId,
-        uint256 indexed secondTokenId,
-        uint256 listingIndex
-    );
+    event SwapCompleted(uint256 indexed firstTokenId, uint256 indexed secondTokenId, uint256 listingIndex);
 
     struct TokenOffer {
         address owner;
@@ -153,10 +141,8 @@ contract NononSwap {
     }
 
     function nononExists(uint256 tokenId) public view returns (bool) {
-        (bool success, bytes memory data) = address(nononAddress).staticcall(
-            abi.encodeWithSignature("ownerOf(uint256)", tokenId)
-        );
-        
-        return success && data.length > 0;
+        (bool success,) = address(nononAddress).staticcall(abi.encodeWithSignature("ownerOf(uint256)", tokenId));
+
+        return success;
     }
 }
