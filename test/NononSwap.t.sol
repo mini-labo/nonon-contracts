@@ -170,6 +170,22 @@ contract NononSwapTest is Test {
         assertEq(nononSwap.getAllAvailableOffers()[1].ownedId, 3);
     }
 
+    function testCanRemoveZeroIndexOffer() public {
+        address a = vm.addr(1);
+
+        nonon.mint(a, 5);
+
+        vm.startPrank(a);
+        nonon.approve(address(nononSwap), 1);
+        nonon.approve(address(nononSwap), 2);
+        nononSwap.createTokenOffer(1, 0);
+
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 0);
+    }
+
     function testGetAvailableOffersByToken() public {
         address a = vm.addr(1);
         address b = vm.addr(2);

@@ -104,7 +104,7 @@ contract NononSwap {
 
         TokenOffer memory offer = offers[_tokenId];
 
-        if (offer.listingIndex == 0) {
+        if (offer.owner == address(0)) {
             revert NoActiveOffer();
         }
 
