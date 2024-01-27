@@ -51,7 +51,7 @@ contract NononSwap {
      * @param _wantedId Token that `msg.sender` wants, 0 if they dont care
      * and just want to farm friendship points.
      */ 
-    function createTokenOffer(uint16 _ownedId, uint16 _wantedId) external {
+    function createTokenOffer(uint16 _ownedId, uint16 _wantedId) public {
         INonon nonon = INonon(nononAddress);
 
         if (!nononExists(_ownedId) || (_wantedId != 0 && !nononExists(_wantedId))) {
@@ -72,7 +72,7 @@ contract NononSwap {
         emit OfferCreated(msg.sender, _ownedId, _wantedId);
     }
 
-    function completeTokenOffer(uint16 _offerTokenId, uint16 _swapId) external {
+    function completeTokenOffer(uint16 _offerTokenId, uint16 _swapId) public {
         INonon nonon = INonon(nononAddress);
 
         TokenOffer memory offer = offers[_offerTokenId];
