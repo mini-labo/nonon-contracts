@@ -38,19 +38,15 @@ contract NononSwapTest is Test {
         vm.stopPrank();
     }
 
-    function testCantCreateMultipleOffersSameToken() public {
+    function testCanOverwriteCurrentOffer() public {
         address a = vm.addr(1);
 
         nonon.mint(a, 1);
 
         vm.startPrank(a);
-
         nonon.setApprovalForAll(address(nononSwap), true);
         nononSwap.createTokenOffer(1, 0);
-
-        vm.expectRevert(TokenHasExistingOffer.selector);
         nononSwap.createTokenOffer(1, 0);
-
         vm.stopPrank();
     }
 
@@ -164,32 +160,6 @@ contract NononSwapTest is Test {
 
         nononSwap.removeOffer(2);
         vm.stopPrank();
-
-        // assertEq(nononSwap.getAllAvailableOffers().length, 2);
-        // assertEq(nononSwap.getAllAvailableOffers()[0].ownedId, 1);
-        // assertEq(nononSwap.getAllAvailableOffers()[1].ownedId, 3);
-    }
-
-    function testRemovingOfferDoesntDuplicateListingIndex() public {
-        address a = vm.addr(1);
-
-        nonon.mint(a, 5);
-
-        vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
-        nononSwap.createTokenOffer(1, 0);
-        nononSwap.createTokenOffer(2, 0);
-        nononSwap.createTokenOffer(3, 0);
-
-        nononSwap.removeOffer(2);
-        nononSwap.createTokenOffer(4, 0);
-        vm.stopPrank();
-
-        // assertEq(nononSwap.getAllAvailableOffers().length, 3);
-        // assertEq(nononSwap.getAllAvailableOffers()[0].listingIndex, 0);
-        // assertEq(nononSwap.getAllAvailableOffers()[1].listingIndex, 1);
-        // assertEq(nononSwap.getAllAvailableOffers()[2].listingIndex, 2);
     }
 
     function testCanRemoveZeroIndexOffer() public {
@@ -204,33 +174,48 @@ contract NononSwapTest is Test {
 
         nononSwap.removeOffer(1);
         vm.stopPrank();
-
-        // assertEq(nononSwap.getAllAvailableOffers().length, 0);
     }
 
-    function testGetAvailableOffersByToken() public {
+    function testCantAcceptOpenOfferIfTokenTransfered() public {
         address a = vm.addr(1);
+        address aAltAccount = vm.addr(69);
         address b = vm.addr(2);
 
         nonon.mint(a, 5);
         nonon.mint(b, 5);
 
         vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
         nonon.approve(address(nononSwap), 3);
-        nonon.approve(address(nononSwap), 4);
-        nononSwap.createTokenOffer(1, 6);
-        nononSwap.createTokenOffer(2, 6);
-        nononSwap.createTokenOffer(3, 6);
-        nononSwap.createTokenOffer(4, 7);
+        nononSwap.createTokenOffer(3, 0);
+        nonon.transferFrom(a, aAltAccount, 3);
         vm.stopPrank();
 
-        assertEq(nononSwap.getAvailableOffersByToken(6).length, 3);
-        assertEq(nononSwap.getAvailableOffersByToken(7).length, 1);
-
-        assertEq(nononSwap.getAvailableOffersByToken(7)[0].owner, a);
-        assertEq(nononSwap.getAvailableOffersByToken(7)[0].ownedId, 4);
-        assertEq(nononSwap.getAvailableOffersByToken(7)[0].wantedId, 7);
+        vm.startPrank(b);
+        nonon.approve(address(nononSwap), 8);
+        vm.expectRevert();
+        nononSwap.completeTokenOffer(3, 8);
+        vm.stopPrank();
     }
+
+    function testCantAcceptClosedOfferIfTokenTransfered() public {
+        address a = vm.addr(1);
+        address aAltAccount = vm.addr(69);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 5);
+        nonon.mint(b, 5);
+
+        vm.startPrank(a);
+        nonon.approve(address(nononSwap), 3);
+        nononSwap.createTokenOffer(3, 8);
+        nonon.transferFrom(a, aAltAccount, 3);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        nonon.approve(address(nononSwap), 8);
+        vm.expectRevert();
+        nononSwap.completeTokenOffer(3, 8);
+        vm.stopPrank();
+    }
+
 }

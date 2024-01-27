@@ -1,14 +1,25 @@
+// SPDX-License-Identifier: MIT
+
 /// @title nonon swap
 
 pragma solidity 0.8.16;
 
 import "./interfaces/INonon.sol";
 
+// errors
 error Unauthorized();
 error OfferForNonexistentToken();
 error NoActiveOffer();
 error NotRequestedToken();
 error TokenHasExistingOffer();
+
+// state
+struct TokenOffer {
+    address owner;
+    uint16 ownedId;
+    uint16 wantedId; // unset (zero) is considered to be open
+    bool completedOrCanceled;
+}
 
 contract NononSwap {
     address public immutable nononAddress;
@@ -18,20 +29,27 @@ contract NononSwap {
     event OfferCancelled(address indexed owner, uint256 indexed ownedId, uint256 indexed wantedId);
     event SwapCompleted(uint256 indexed firstTokenId, uint256 indexed secondTokenId);
 
-    struct TokenOffer {
-        address owner;
-        uint16 ownedId;
-        uint16 wantedId; // unset (zero) is considered to be open
-        bool completedOrCanceled;
-    }
-
-    // for listing / lookup
-    TokenOffer[2**16] public offers;
+    /**
+     * @dev Mapping (implemented as an array for gas efficiency) between token
+     * ids and token offers. Thus, `offers[0]` should never be defined. Note
+     * that `5000` is the nonon max supply. 
+     */
+    TokenOffer[5001] public offers;
 
     constructor(address _nononAddress) {
         nononAddress = _nononAddress;
     }
 
+    /**
+     * @dev Create a token swap offer for the owned token `_ownedId` and the
+     * wanted token `_wantedId`. It can also be used to update already set
+     * offers so the owner doenst need to call `removeOffer` every time they
+     * want to change their offer.
+     * @param _ownedId Token that `msg.sender` owns and wants to swap for
+     * `_wantedId`
+     * @param _wantedId Token that `msg.sender` wants, 0 if they dont care
+     * and just want to farm friendship points.
+     */ 
     function createTokenOffer(uint16 _ownedId, uint16 _wantedId) external {
         INonon nonon = INonon(nononAddress);
 
@@ -43,14 +61,12 @@ contract NononSwap {
             revert Unauthorized();
         }
 
-        TokenOffer memory offer = TokenOffer({
+        offers[_ownedId] = TokenOffer({
             owner: msg.sender,
             ownedId: _ownedId,
             wantedId: _wantedId,
             completedOrCanceled: false
         });
-
-        offers[_ownedId] = offer;
 
         emit OfferCreated(msg.sender, _ownedId, _wantedId);
     }
@@ -94,7 +110,6 @@ contract NononSwap {
             revert NoActiveOffer();
         }
 
-        // Swap and pop
         offer.completedOrCanceled = true;
         offers[_tokenId] = offer;
 
@@ -126,9 +141,9 @@ contract NononSwap {
         return matchingOffers;
     }
 
-    function nononExists(uint256 tokenId) public view returns (bool) {
-        (bool success,) = address(nononAddress).staticcall(abi.encodeWithSignature("ownerOf(uint256)", tokenId));
-
-        return success;
+    // TODO Test gas efficiency for also returning the owner
+    function nononExists(uint16 tokenId) public view returns (bool success) {
+        (success,) = nononAddress.staticcall(abi.encodeWithSignature("ownerOf(uint256)", tokenId));
     }
+
 }
