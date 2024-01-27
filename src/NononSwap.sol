@@ -22,6 +22,7 @@ struct TokenOffer {
 }
 
 contract NononSwap {
+    uint256 public constant nononMaxSupply = 5000;
     address public immutable nononAddress;
 
     // events
@@ -29,12 +30,12 @@ contract NononSwap {
     event OfferCancelled(address indexed owner, uint256 indexed ownedId, uint256 indexed wantedId);
     event SwapCompleted(uint256 indexed firstTokenId, uint256 indexed secondTokenId);
 
+    
     /**
      * @dev Mapping (implemented as an array for gas efficiency) between token
-     * ids and token offers. Thus, `offers[0]` should never be defined. Note
-     * that `5000` is the nonon max supply. 
+     * ids and token offers. Thus, `offers[0]` should never be defined.
      */
-    TokenOffer[5001] public offers;
+    TokenOffer[nononMaxSupply + 1] public offers;
 
     constructor(address _nononAddress) {
         nononAddress = _nononAddress;
