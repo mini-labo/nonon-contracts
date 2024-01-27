@@ -22,13 +22,13 @@ contract NononSwap {
 
     struct TokenOffer {
         address owner;
-        uint256 ownedId;
-        uint256 wantedId; // unset (zero) is considered to be open
-        uint256 listingIndex; // for lookup
+        uint16 ownedId;
+        uint16 wantedId; // unset (zero) is considered to be open
+        uint16 listingIndex; // for lookup
     }
 
     // owned token id => owner
-    mapping(uint256 => TokenOffer) public offers;
+    mapping(uint16 => TokenOffer) public offers;
 
     // for listing / lookup
     TokenOffer[] public availableOffers;
@@ -37,7 +37,7 @@ contract NononSwap {
         nononAddress = _nononAddress;
     }
 
-    function createTokenOffer(uint256 _ownedId, uint256 _wantedId) external {
+    function createTokenOffer(uint16 _ownedId, uint16 _wantedId) external {
         INonon nonon = INonon(nononAddress);
 
         if (!nononExists(_ownedId) || (_wantedId != 0 && !nononExists(_wantedId))) {
@@ -57,7 +57,7 @@ contract NononSwap {
             ownedId: _ownedId,
             wantedId: _wantedId,
             // note: below is accurate to 0 based index since it happens before push
-            listingIndex: availableOffers.length
+            listingIndex: uint16(availableOffers.length)
         });
 
         offers[_ownedId] = offer;
@@ -66,7 +66,7 @@ contract NononSwap {
         emit OfferCreated(msg.sender, _ownedId, _wantedId, offer.listingIndex);
     }
 
-    function completeTokenOffer(uint256 _offerTokenId, uint256 _swapId) external {
+    function completeTokenOffer(uint16 _offerTokenId, uint16 _swapId) external {
         INonon nonon = INonon(nononAddress);
 
         TokenOffer memory offer = offers[_offerTokenId];
@@ -85,7 +85,8 @@ contract NononSwap {
 
         // Swap and pop
         uint256 lastIndex = availableOffers.length - 1;
-        uint256 replaceIndex = offer.listingIndex;
+        uint16 replaceIndex = offer.listingIndex;
+
         offers[availableOffers[lastIndex].ownedId].listingIndex = replaceIndex;
         availableOffers[replaceIndex] = availableOffers[lastIndex];
         availableOffers[replaceIndex].listingIndex = replaceIndex;
@@ -100,7 +101,7 @@ contract NononSwap {
         nonon.transferFrom(offer.owner, msg.sender, offer.ownedId);
     }
 
-    function removeOffer(uint256 _tokenId) public {
+    function removeOffer(uint16 _tokenId) public {
         INonon nonon = INonon(nononAddress);
 
         if (nonon.ownerOf(_tokenId) != msg.sender) {
@@ -115,7 +116,7 @@ contract NononSwap {
 
         // Swap and pop
         uint256 lastIndex = availableOffers.length - 1;
-        uint256 replaceIndex = offer.listingIndex;
+        uint16 replaceIndex = offer.listingIndex;
         offers[availableOffers[lastIndex].ownedId].listingIndex = replaceIndex;
         availableOffers[replaceIndex] = availableOffers[lastIndex];
         availableOffers[replaceIndex].listingIndex = replaceIndex;
