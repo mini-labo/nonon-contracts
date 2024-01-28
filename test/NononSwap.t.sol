@@ -156,8 +156,7 @@ contract NononSwapTest is Test {
         nonon.mint(a, 5);
 
         vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
+        nonon.setApprovalForAll(address(nononSwap), true);
         nononSwap.createTokenOffer(1, 0);
         nononSwap.createTokenOffer(2, 0);
         nononSwap.createTokenOffer(3, 0);
@@ -176,8 +175,7 @@ contract NononSwapTest is Test {
         nonon.mint(a, 5);
 
         vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
+        nonon.setApprovalForAll(address(nononSwap), true);
         nononSwap.createTokenOffer(1, 0);
         nononSwap.createTokenOffer(2, 0);
         nononSwap.createTokenOffer(3, 0);
@@ -198,14 +196,151 @@ contract NononSwapTest is Test {
         nonon.mint(a, 5);
 
         vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
+        nonon.setApprovalForAll(address(nononSwap), true);
         nononSwap.createTokenOffer(1, 0);
 
         nononSwap.removeOffer(1);
         vm.stopPrank();
 
         assertEq(nononSwap.getAllAvailableOffers().length, 0);
+    }
+
+    function testCanRemoveOfferOwnerDoesntOwnToken() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 5);
+
+        vm.startPrank(a);
+        nonon.setApprovalForAll(address(nononSwap), true);
+        nononSwap.createTokenOffer(1, 0);
+        nonon.transferFrom(a, b, 1);
+
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 0);
+    }
+
+    function testCantRemoveOfferOwnerOwnsToken() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 5);
+
+        vm.startPrank(a);
+        nonon.setApprovalForAll(address(nononSwap), true);
+        nononSwap.createTokenOffer(1, 0);
+
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        vm.expectRevert(Unauthorized.selector);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 1);
+    }
+ 
+    function testCanRemoveOfferOwnerNoSwapPermission() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 5);
+
+        vm.startPrank(a);
+        // no approval granted to contract by address a
+        nononSwap.createTokenOffer(1, 0);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 0);
+    }
+
+    function testCantRemoveOfferOwnerGrantedSwapPermission() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 5);
+
+        vm.startPrank(a);
+        nonon.setApprovalForAll(address(nononSwap), true);
+        nononSwap.createTokenOffer(1, 0);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        vm.expectRevert(Unauthorized.selector);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 1);
+    }
+
+    function testCanRemoveOfferSenderOwnsWantedId() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 1);
+        nonon.mint(b, 1);
+
+        vm.startPrank(a);
+        nonon.setApprovalForAll(address(nononSwap), true);
+        nononSwap.createTokenOffer(1, 2);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 0);
+    }
+
+    function testCantRemoveOfferSenderDoesntOwnWantedId() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+        address c = vm.addr(3);
+
+        nonon.mint(a, 1);
+        nonon.mint(b, 1);
+        nonon.mint(c, 1);
+
+        vm.startPrank(a);
+        nonon.setApprovalForAll(address(nononSwap), true);
+        nononSwap.createTokenOffer(1, 3);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        vm.expectRevert(Unauthorized.selector);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 1);
+    }
+
+    function testCantRemoveOfferWantedIdZero() public {
+        address a = vm.addr(1);
+        address b = vm.addr(2);
+
+        nonon.mint(a, 1);
+        nonon.mint(b, 1);
+
+        vm.startPrank(a);
+        nonon.setApprovalForAll(address(nononSwap), true);
+        nononSwap.createTokenOffer(1, 0);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        vm.expectRevert(Unauthorized.selector);
+        nononSwap.removeOffer(1);
+        vm.stopPrank();
+
+        assertEq(nononSwap.getAllAvailableOffers().length, 1);
     }
 
     function testGetAvailableOffersByToken() public {

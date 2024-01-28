@@ -103,11 +103,22 @@ contract NononSwap {
     function removeOffer(uint256 _tokenId) public {
         INonon nonon = INonon(nononAddress);
 
-        if (nonon.ownerOf(_tokenId) != msg.sender) {
+        TokenOffer memory offer = offers[_tokenId];
+
+        // allow removal (aka: dont revert) in one of these cases:
+        // - the user is the creator of the offer OR
+        // - the offer creator no longer owns the offer token OR
+        // - the swap contract does not have approval to transfer nonons on behalf of owner OR
+        // - msg.sender is the owner of offer.wantedId
+        // if none of these conditions are met (inverses are all true), revert
+        if (
+            offer.owner != msg.sender // User is not the creator of the offer
+                && nonon.ownerOf(_tokenId) == offer.owner // Offer creator still owns the token
+                && nonon.isApprovedForAll(offer.owner, address(this)) // Contract is approved
+                && (offer.wantedId == 0 || nonon.ownerOf(offer.wantedId) != msg.sender) // No wantedId or user does not own the wantedId
+        ) {
             revert Unauthorized();
         }
-
-        TokenOffer memory offer = offers[_tokenId];
 
         if (offer.owner == address(0)) {
             revert NoActiveOffer();
