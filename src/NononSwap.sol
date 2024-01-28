@@ -18,7 +18,6 @@ struct TokenOffer {
     address owner;
     uint16 ownedId;
     uint16 wantedId; // unset (zero) is considered to be open
-    bool completedOrCanceled;
 }
 
 contract NononSwap {
@@ -27,10 +26,9 @@ contract NononSwap {
 
     // events
     event OfferCreated(address indexed owner, uint256 indexed ownedId, uint256 indexed wantedId);
-    event OfferCancelled(address indexed owner, uint256 indexed ownedId, uint256 indexed wantedId);
+    event OfferCancelled(address indexed owner, uint256 indexed ownedId);
     event SwapCompleted(uint256 indexed firstTokenId, uint256 indexed secondTokenId);
 
-    
     /**
      * @dev Mapping (implemented as an array for gas efficiency) between token
      * ids and token offers. Thus, `offers[0]` should never be defined.
@@ -65,8 +63,7 @@ contract NononSwap {
         offers[_ownedId] = TokenOffer({
             owner: msg.sender,
             ownedId: _ownedId,
-            wantedId: _wantedId,
-            completedOrCanceled: false
+            wantedId: _wantedId
         });
 
         emit OfferCreated(msg.sender, _ownedId, _wantedId);
@@ -77,7 +74,7 @@ contract NononSwap {
 
         TokenOffer memory offer = offers[_offerTokenId];
 
-        if (offer.completedOrCanceled || offer.owner == address(0) || !nononExists(_offerTokenId)) {
+        if (offer.owner == address(0) || !nononExists(_offerTokenId)) {
             revert NoActiveOffer();
         }
 
@@ -90,8 +87,10 @@ contract NononSwap {
         }
 
         emit SwapCompleted(_offerTokenId, _swapId);
-        offer.completedOrCanceled = true;
-        offers[_offerTokenId] = offer;
+
+        assembly {
+            sstore(add(offers.slot, _offerTokenId), 0)
+        }
 
         // transfer tokens
         nonon.transferFrom(msg.sender, offer.owner, _swapId);
@@ -105,16 +104,11 @@ contract NononSwap {
             revert Unauthorized();
         }
 
-        TokenOffer memory offer = offers[_tokenId];
-
-        if (offer.completedOrCanceled || offer.owner == address(0)) {
-            revert NoActiveOffer();
+        assembly {
+            sstore(add(offers.slot, _tokenId), 0)
         }
 
-        offer.completedOrCanceled = true;
-        offers[_tokenId] = offer;
-
-        emit OfferCancelled(offer.owner, offer.ownedId, offer.wantedId);
+        emit OfferCancelled(msg.sender, _tokenId);
     }
 
     // TODO Filter completed offers, it can be done from a front-end.
