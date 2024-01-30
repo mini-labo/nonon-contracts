@@ -152,8 +152,7 @@ contract NononSwapTest is Test {
         nonon.mint(a, 5);
 
         vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
+        nonon.setApprovalForAll(address(nononSwap), true);
         nononSwap.createTokenOffer(1, 0);
         nononSwap.createTokenOffer(2, 0);
         nononSwap.createTokenOffer(3, 0);
@@ -168,8 +167,7 @@ contract NononSwapTest is Test {
         nonon.mint(a, 5);
 
         vm.startPrank(a);
-        nonon.approve(address(nononSwap), 1);
-        nonon.approve(address(nononSwap), 2);
+        nonon.setApprovalForAll(address(nononSwap), true);
         nononSwap.createTokenOffer(1, 0);
 
         nononSwap.removeOffer(1);
@@ -217,5 +215,4 @@ contract NononSwapTest is Test {
         nononSwap.completeTokenOffer(3, 8);
         vm.stopPrank();
     }
-
 }
