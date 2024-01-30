@@ -231,7 +231,9 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
                 } else {
                     // highest level
                     uint256 maxPoints = IERC721A(collectionAddress).totalSupply() * 2;
-                    return LevelImageData(level.name, level.colorGradient, level.spriteIndex, level.spriteLength, maxPoints);
+                    return LevelImageData(
+                        level.name, level.colorGradient, level.spriteIndex, level.spriteLength, maxPoints
+                    );
                 }
             }
             unchecked {
