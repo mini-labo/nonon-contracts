@@ -111,34 +111,13 @@ contract NononSwap {
         emit OfferCancelled(msg.sender, _tokenId);
     }
 
-    // TODO Filter completed offers, it can be done from a front-end.
-    // function getAllAvailableOffers() public view returns (TokenOffer[] memory) {
-    //     return offers;
-    // }
-
-    function getAvailableOffersByToken(uint256 _wantedTokenId) public view returns (TokenOffer[] memory) {
-        uint256 count = 0;
-        for (uint256 i = 0; i < offers.length; i++) {
-            if (offers[i].wantedId == _wantedTokenId) {
-                count++;
-            }
-        }
-
-        TokenOffer[] memory matchingOffers = new TokenOffer[](count);
-        uint256 j = 0;
-        for (uint256 i = 0; i < offers.length; i++) {
-            if (offers[i].wantedId == _wantedTokenId) {
-                matchingOffers[j] = offers[i];
-                j++;
-            }
-        }
-
-        return matchingOffers;
-    }
-
     // TODO Test gas efficiency for also returning the owner
     function nononExists(uint16 tokenId) public view returns (bool success) {
         (success,) = nononAddress.staticcall(abi.encodeWithSignature("ownerOf(uint256)", tokenId));
+    }
+
+    function getAllOffers() external view returns (TokenOffer[nononMaxSupply + 1] memory) {
+        return offers;
     }
 
 }
