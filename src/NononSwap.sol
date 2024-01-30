@@ -49,7 +49,7 @@ contract NononSwap {
      * @param _wantedId Token that `msg.sender` wants, 0 if they dont care
      * and just want to farm friendship points.
      */ 
-    function createTokenOffer(uint16 _ownedId, uint16 _wantedId) public {
+    function createTokenOffer(uint16 _ownedId, uint16 _wantedId) external {
         INonon nonon = INonon(nononAddress);
 
         if (!nononExists(_ownedId) || (_wantedId != 0 && !nononExists(_wantedId))) {
@@ -69,7 +69,7 @@ contract NononSwap {
         emit OfferCreated(msg.sender, _ownedId, _wantedId);
     }
 
-    function completeTokenOffer(uint16 _offerTokenId, uint16 _swapId) public {
+    function completeTokenOffer(uint16 _offerTokenId, uint16 _swapId) external {
         INonon nonon = INonon(nononAddress);
 
         TokenOffer memory offer = offers[_offerTokenId];
@@ -97,7 +97,7 @@ contract NononSwap {
         nonon.transferFrom(offer.owner, msg.sender, offer.ownedId);
     }
 
-    function removeOffer(uint16 _tokenId) public {
+    function removeOffer(uint16 _tokenId) external {
         INonon nonon = INonon(nononAddress);
 
         if (nonon.ownerOf(_tokenId) != msg.sender) {
@@ -111,13 +111,11 @@ contract NononSwap {
         emit OfferCancelled(msg.sender, _tokenId);
     }
 
-    // TODO Test gas efficiency for also returning the owner
-    function nononExists(uint16 tokenId) public view returns (bool success) {
+    function nononExists(uint16 tokenId) internal view returns (bool success) {
         (success,) = nononAddress.staticcall(abi.encodeWithSignature("ownerOf(uint256)", tokenId));
     }
 
     function getAllOffers() external view returns (TokenOffer[nononMaxSupply + 1] memory) {
         return offers;
     }
-
 }
