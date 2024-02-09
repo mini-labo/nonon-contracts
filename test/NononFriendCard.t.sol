@@ -33,20 +33,6 @@ contract NononFriendCardTest is Test {
         nonon.setFriendshipCard(address(friendshipCard));
     }
 
-    function testDebugTokenURI() public {
-        address minter = vm.addr(555);
-        nonon.mint(minter, 1);
-
-        friendshipCard.tokenURI(1);
-    }
-
-    function testDebugTokenURILevel2() public {
-        address minter = vm.addr(556);
-        nonon.mint(minter, 11);
-
-        friendshipCard.tokenURI(1);
-    }
-
     function testFailTransferToThirdParty() public {
         address recipient = vm.addr(999);
         vm.prank(address(nonon));
